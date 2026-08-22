@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<title>HCS - Hannan Computers & Printers</title>
+<style>
+:root{--b:#07111f;--c:#0f1d31;--g:#f5b942;--t:#f8fafc;--m:#9fb0c6}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(circle at 20% 0,#15345d 0,#07111f 35%);color:var(--t);font-family:Segoe UI,Arial,sans-serif}
+.wrap{width:min(1180px,92vw);margin:auto}
+.top{padding:8px 0;background:#040a12;color:#cbd5e1;font-size:13px}.top .wrap,.nav{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap}
+header{position:sticky;top:0;background:#07111fee;backdrop-filter:blur(14px);border-bottom:1px solid #ffffff12;z-index:10}
+.nav{height:76px}.logo{display:flex;gap:10px;align-items:center}.mark{background:linear-gradient(135deg,#f5b942,#ffdc85);color:#07111f;font-weight:900;padding:12px;border-radius:14px}
+.links button,.btn{border:0;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer}.links button{background:transparent;color:white}.gold{background:var(--g);color:#07111f}
+.hero{padding:85px 0}.hero h1{font-size:clamp(44px,7vw,76px);line-height:1;margin:12px 0}.hero p,.muted{color:var(--m);line-height:1.7}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:linear-gradient(180deg,#12243a,#0b1728);border:1px solid #ffffff12;border-radius:18px;overflow:hidden}
+.pic{height:160px;background:#102743;display:grid;place-items:center;color:#58708c;font-weight:800}.pic img{width:100%;height:100%;object-fit:cover}.body{padding:16px}
+.cat{color:#ffd875;font-size:12px;font-weight:800}.title{font-size:20px;font-weight:800;margin:8px 0}.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.sm{padding:8px 10px;border-radius:9px;border:1px solid #ffffff18;background:#ffffff0d;color:white;cursor:pointer}.wa{background:#16a34a}.blue{background:#2563eb}
+section{padding:68px 0}.head h2{font-size:34px;margin-bottom:6px}.search{width:100%;background:#091626;border:1px solid #ffffff14;color:white;padding:11px;border-radius:9px}
+.empty{grid-column:1/-1;padding:25px;text-align:center;color:var(--m);border:1px dashed #ffffff18;border-radius:14px}
+footer{border-top:1px solid #ffffff12;padding:35px 0;color:var(--m)}
+.notice{display:none;background:#7f1d1d;color:#fee2e2;padding:12px;text-align:center}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.links{display:none}}@media(max-width:600px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="notice" class="notice"></div>
+<div class="top"><div class="wrap"><span>Hannan Computers & Printers — Bangla Chowk Mamukanjan</span><span>WhatsApp: 0334-6395391</span></div></div>
+<header><div class="wrap nav"><div class="logo"><div class="mark">HCS</div><div><b>HCS</b><div class="muted" style="font-size:12px">Hannan Computers & Printers</div></div></div>
+<div class="links"><button onclick="go('home')">Home</button><button onclick="go('services')">Services</button><button onclick="go('jobs')">Jobs</button><button onclick="go('downloads')">Downloads</button><button onclick="go('shop')">Shop</button><button onclick="go('contact')">Contact</button></div>
+<button class="btn gold" onclick="openAdmin()">Admin Login</button></div></header>
+
+<section id="home" class="hero"><div class="wrap"><div style="max-width:780px"><div style="color:#ffd875;font-weight:800">YOUR LOCAL DIGITAL & PRINTING PARTNER</div><h1>Everything you need, <span style="color:#ffd875">in one place.</span></h1><p>Printing, online services, jobs information, computer services, customized products, downloads and much more.</p><button class="btn gold" onclick="go('services')">Explore Services</button> <button class="btn" onclick="wa('Assalam-o-Alaikum, mujhe HCS services ke bare mein maloomat chahiye.')">WhatsApp Us</button></div></div></section>
+
+<section id="services"><div class="wrap"><div class="head"><h2>Our Services</h2><p class="muted">Professional services by HCS.</p></div><div id="sg" class="grid"></div></div></section>
+<section id="jobs"><div class="wrap"><div class="head"><h2>Latest Jobs</h2><p class="muted">Daily jobs, last dates, extensions and apply links.</p></div><input id="jq" class="search" placeholder="Search jobs..." oninput="rJobs()"><div id="jg" class="grid" style="margin-top:16px"></div></div></section>
+<section id="downloads"><div class="wrap"><div class="head"><h2>Downloads</h2><p class="muted">Useful software, drivers and tools.</p></div><div id="dg" class="grid"></div></div></section>
+<section id="shop"><div class="wrap"><div class="head"><h2>HCS Shop</h2><p class="muted">Computer accessories, customized printing items and stationery.</p></div><div id="pg" class="grid"></div></div></section>
+<section id="contact"><div class="wrap"><div class="card body"><h2>Contact HCS</h2><p class="muted">Hannan Computers & Printers — Bangla Chowk Mamukanjan</p><button class="btn gold" onclick="wa('Assalam-o-Alaikum, mujhe HCS se maloomat chahiye.')">WhatsApp 0334-6395391</button></div></div></section>
+<footer><div class="wrap">HCS — Hannan Computers & Printers · 0334-6395391</div></footer>
+
+<script>
+// IMPORTANT: paste your Apps Script WEB APP /exec URL between the quotes below.
+const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzPCwd-DePLGntU_vYLTycqGLkaoF9sc2vGitJ6KDxfLxkiwOBTzp4RkgSlLLaJVTI/exec";
+
+let D={services:[],jobs:[],downloads:[],products:[]};
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function go(x){document.getElementById(x).scrollIntoView({behavior:'smooth'})}
+function wa(m){window.open('https://wa.me/923346395391?text='+encodeURIComponent(m),'_blank')}
+function pic(u){return u?`<img src="${esc(u)}" onerror="this.parentElement.textContent='HCS'">`:'HCS'}
+function openAdmin(){
+  if(BACKEND_URL.startsWith("http")) window.open(BACKEND_URL,'_blank');
+  else alert("Backend URL abhi set nahi hua.");
+}
+function showError(msg){notice.style.display='block';notice.textContent=msg}
+
+window.hcsDataCallback=function(x){D=x||D;rAll()}
+function loadData(){
+  if(!BACKEND_URL.startsWith("http")){
+    showError("Website setup pending: BACKEND_URL set karna hai.");
+    return;
+  }
+  const s=document.createElement('script');
+  s.src=BACKEND_URL+(BACKEND_URL.includes('?')?'&':'?')+'api=public&callback=hcsDataCallback&_='+Date.now();
+  s.onerror=()=>showError("HCS data load nahi ho saka. Apps Script deployment/version check karein.");
+  document.body.appendChild(s);
+}
+function rAll(){
+  sg.innerHTML=D.services.map(x=>`<div class="card"><div class="pic">${pic(x.ImageURL)}</div><div class="body"><div class="cat">${esc(x.Category)}</div><div class="title">${esc(x.Title)}</div><div class="muted">${esc(x.Description)}</div><div class="actions"><button class="sm wa" onclick='wa(${JSON.stringify(String(x.WhatsAppText||x.Title))})'>WhatsApp</button></div></div></div>`).join('')||'<div class="empty">Services will appear here.</div>';
+  rJobs();
+  dg.innerHTML=D.downloads.map(x=>`<div class="card"><div class="pic">${pic(x.ImageURL)}</div><div class="body"><div class="cat">${esc(x.Category)}</div><div class="title">${esc(x.Title)}</div><div class="muted">${esc(x.Description)}</div><div class="actions">${x.URL?`<button class="sm blue" onclick="window.open('${esc(x.URL)}','_blank')">Download</button>`:''}</div></div></div>`).join('')||'<div class="empty">Downloads will appear here.</div>';
+  pg.innerHTML=D.products.map(x=>`<div class="card"><div class="pic">${pic(x.ImageURL)}</div><div class="body"><div class="cat">${esc(x.Category)}</div><div class="title">${esc(x.Title)}</div>${x.Price?`<b>Rs ${esc(x.Price)}</b>`:''}<div class="muted">${esc(x.Description)}</div><div class="actions"><button class="sm wa" onclick='wa(${JSON.stringify(String(x.WhatsAppText||x.Title))})'>Order on WhatsApp</button></div></div></div>`).join('')||'<div class="empty">Shop items will appear here.</div>';
+}
+function rJobs(){
+  let q=(jq.value||'').toLowerCase();
+  jg.innerHTML=D.jobs.filter(x=>[x.Title,x.Department,x.Location].join(' ').toLowerCase().includes(q)).map(x=>`<div class="card"><div class="pic">${pic(x.AdURL)}</div><div class="body"><div class="cat">${esc(x.Department)}</div><div class="title">${esc(x.Title)}</div><div class="muted">${esc(x.Description||x.Qualification)}</div><p>Last Date: <b>${esc(x.ExtendedDate||x.LastDate||'')}</b><br>Status: ${esc(x.ComputedStatus)}</p><div class="actions">${x.ApplyLink?`<button class="sm blue" onclick="window.open('${esc(x.ApplyLink)}','_blank')">Apply / Details</button>`:''}${x.AdURL?`<button class="sm" onclick="window.open('${esc(x.AdURL)}','_blank')">View Ad</button>`:''}</div></div></div>`).join('')||'<div class="empty">No jobs yet.</div>';
+}
+loadData();
+</script>
+</body></html>
