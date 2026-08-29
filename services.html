@@ -91,6 +91,7 @@ section{padding:62px 0}
 .socials{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
 .socials a{display:inline-flex;align-items:center;justify-content:center;padding:9px 12px;border:1px solid #ffffff2e;border-radius:10px;font-weight:700}
 .socials a:hover{background:#ffffff12;color:var(--gold2)}
+.contactGrid{display:grid;grid-template-columns:.8fr 1.2fr;gap:20px;align-items:start}.contactForm{display:grid;grid-template-columns:1fr 1fr;gap:12px}.contactForm .full{grid-column:1/-1}.contactForm label{display:block;font-size:13px;font-weight:800;margin-bottom:6px}.contactForm input,.contactForm textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;background:#fff}.contactForm textarea{min-height:140px;resize:vertical}.contactStatus{display:none;margin-top:12px;padding:10px 12px;border-radius:9px;background:#eef6ff;color:#174b84}.contactStatus.ok{background:#eaf8ef;color:#14733a}.contactStatus.error{background:#fff0f0;color:#b42318}.trap{position:absolute!important;left:-9999px!important;opacity:0!important}
 .filterRow{display:grid;grid-template-columns:1fr 240px;gap:12px}
 .jobDescription{white-space:pre-line;margin-top:8px}
 .jobActions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}
@@ -124,6 +125,7 @@ input,textarea,select{width:100%;background:#fff;border:1px solid #dfe6ef;color:
 }
 @media(max-width:650px){
   .grid{grid-template-columns:1fr}.form{grid-template-columns:1fr}.full{grid-column:auto}
+  .contactGrid,.contactForm{grid-template-columns:1fr}.contactForm .full{grid-column:auto}
   .jobCard{grid-template-columns:1fr}.jobCard .jobBanner{min-height:220px}
   .jobMeta{grid-template-columns:1fr}.footerGrid{grid-template-columns:1fr}
   .filterRow{grid-template-columns:1fr}.hero{padding-top:42px}.hero h1{font-size:42px}
@@ -147,7 +149,7 @@ input,textarea,select{width:100%;background:#fff;border:1px solid #dfe6ef;color:
 <section id="jobs"><div class="wrap"><div class="head"><h2>Latest Jobs</h2><p class="muted">Recent Government, Private and Online jobs appear first.</p></div><div class="filterRow"><input id="jq" class="search" placeholder="Search jobs..." oninput="rJobs()"><select id="jobCategory" onchange="rJobs()"><option value="">All Job Categories</option><option>Government Jobs</option><option>Private Jobs</option><option>Online Jobs</option></select></div><div id="jg" class="jobsList" style="margin-top:16px"></div></div></section>
 <section id="downloads"><div class="wrap"><div class="head"><h2>Downloads</h2><p class="muted">Useful software, drivers and tools.</p></div><div id="dg" class="grid"></div></div></section>
 <section id="shop"><div class="wrap"><div class="head"><h2>HCS Shop</h2><p class="muted">Computer accessories, customized printing items and stationery.</p></div><div id="pg" class="grid"></div></div></section>
-<section id="contact"><div class="wrap"><div class="card body"><h2>Contact HCS</h2><p class="muted">Hannan Computers & Printers — Bangla Chowk Mamukanjan</p><button class="btn gold" onclick="wa('Assalam-o-Alaikum, mujhe HCS se maloomat chahiye.')">WhatsApp 0334-6395391</button></div></div></section>
+<section id="contact"><div class="wrap"><div class="head"><h2>Contact Us</h2><p class="muted">Send your message directly to Hannan Computers & Printers.</p></div><div class="contactGrid"><div class="card body"><h3>HCS Contact Information</h3><p class="muted">Hannan Computers & Printers<br>Bangla Chowk Mamukanjan<br>Email: alhannancomputers@gmail.com<br>WhatsApp: 0334-6395391</p><button class="btn gold" onclick="wa('Assalam-o-Alaikum, mujhe HCS se maloomat chahiye.')">WhatsApp Us</button></div><div class="card body"><form id="contactForm" class="contactForm" onsubmit="submitContact(event)"><div><label for="contactName">Name</label><input id="contactName" maxlength="80" required></div><div><label for="contactPhone">Phone No.</label><input id="contactPhone" type="tel" maxlength="30" required></div><div class="full"><label for="contactEmail">Email</label><input id="contactEmail" type="email" maxlength="120" required></div><div class="full"><label for="contactMessage">Message</label><textarea id="contactMessage" maxlength="2000" required></textarea></div><input id="contactCompany" class="trap" tabindex="-1" autocomplete="off"><div class="full"><button id="contactSubmit" class="btn gold" type="submit">Submit</button><div id="contactStatus" class="contactStatus"></div></div></form></div></div></div></section>
 <footer><div class="wrap footerGrid">
 <div><div class="logo"><div class="mark">HCS</div><div><b>HCS</b><div class="muted">Hannan Computers & Printers</div></div></div><p class="muted">Your trusted partner in printing, technology, jobs information and online services.</p></div>
 <div><b>Quick Links</b><p class="muted">Home<br>Services<br>Jobs<br>Downloads<br>Shop<br>Contact</p></div>
@@ -165,30 +167,49 @@ function toggleMenu(){navLinks.classList.toggle('open')}
 function wa(m){window.open('https://wa.me/923346395391?text='+encodeURIComponent(m),'_blank')}
 function globalSearch(){
   const q=(globalQ.value||'').trim();
-  if(q&&(PAGE==='home'||PAGE==='contact')){location.href='services.html?q='+encodeURIComponent(q);return}
+  if(q&&PAGE==='contact'){location.href='services.html?q='+encodeURIComponent(q);return}
   jq.value=q;
   rAll();
 }
 function configurePage(){
-  ['home','services','jobs','downloads','shop','contact'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=id===PAGE?'block':'none'});
+  ['home','services','jobs','downloads','shop','contact'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=(PAGE==='home'||id===PAGE)?'block':'none'});
   document.querySelectorAll('[data-nav]').forEach(function(a){a.classList.toggle('active',a.dataset.nav===PAGE)});
   var q=new URLSearchParams(location.search).get('q')||'';if(q){globalQ.value=q;jq.value=q}
 }
-function driveImageUrl(u){
+function driveFileId(u){
   u=String(u||'').trim();
-  if(!u)return '';
-  let m=u.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  var m=u.match(/(?:drive\.google\.com\/file\/d\/|googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/);
   if(!m)m=u.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if(m)return 'https://lh3.googleusercontent.com/d/'+m[1]+'=w1600';
-  return u;
+  return m?m[1]:'';
+}
+function driveImageUrl(u){
+  u=String(u||'').trim();var id=driveFileId(u);
+  return id?'https://drive.usercontent.google.com/download?id='+id+'&export=view&authuser=0':u;
 }
 function pic(u){
-  const src=driveImageUrl(u);
-  return src?`<img src="${esc(src)}" alt="HCS" referrerpolicy="no-referrer" onerror="this.parentElement.textContent='HCS'">`:'HCS';
+  const src=driveImageUrl(u),id=driveFileId(u);
+  return src?`<img src="${esc(src)}" data-drive-id="${esc(id)}" data-step="0" alt="HCS" referrerpolicy="no-referrer" onerror="imageFallback(this)">`:'HCS';
+}
+function imageFallback(img){
+  var id=img.dataset.driveId,step=Number(img.dataset.step||0)+1;img.dataset.step=step;
+  if(!id){img.onerror=null;img.parentElement.textContent='HCS';return}
+  if(step===1){img.src='https://lh3.googleusercontent.com/d/'+id;return}
+  if(step===2){img.src='https://drive.google.com/thumbnail?id='+id+'&sz=w1600';return}
+  if(step===3){img.src='https://drive.google.com/uc?export=view&id='+id;return}
+  img.onerror=null;img.parentElement.textContent='Image unavailable';
 }
 function openAdmin(){
   if(BACKEND_URL.startsWith("http")) window.open(BACKEND_URL,'_blank');
   else alert("Backend URL abhi set nahi hua.");
+}
+function submitContact(e){
+  e.preventDefault();var btn=document.getElementById('contactSubmit'),status=document.getElementById('contactStatus');
+  var values={name:contactName.value.trim(),phone:contactPhone.value.trim(),email:contactEmail.value.trim(),message:contactMessage.value.trim(),company:contactCompany.value};
+  btn.disabled=true;btn.textContent='Sending...';status.className='contactStatus';status.style.display='block';status.textContent='Your message is being sent...';
+  var cb='hcsContact_'+Date.now(),script=document.createElement('script'),timer;
+  function finish(){clearTimeout(timer);if(script.parentNode)script.parentNode.removeChild(script);try{delete window[cb]}catch(x){window[cb]=undefined}btn.disabled=false;btn.textContent='Submit'}
+  window[cb]=function(r){status.className='contactStatus '+(r&&r.ok?'ok':'error');status.textContent=r&&r.message?r.message:'Message could not be sent.';if(r&&r.ok)document.getElementById('contactForm').reset();finish()};
+  var q=new URLSearchParams({api:'contact',callback:cb,name:values.name,phone:values.phone,email:values.email,message:values.message,company:values.company});script.src=BACKEND_URL+'?'+q.toString();script.onerror=function(){status.className='contactStatus error';status.textContent='Message could not be sent. Please try WhatsApp.';finish()};document.body.appendChild(script);timer=setTimeout(function(){status.className='contactStatus error';status.textContent='Request timed out. Please try again.';finish()},20000);
 }
 function showError(msg){notice.style.display='block';notice.textContent=msg}
 
