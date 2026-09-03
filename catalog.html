@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Browse HCS computer accessories and customized products with complete specifications.">
+  <title>Product Catalog | HCS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/styles.css"><script type="module" src="js/site.js"></script>
+</head>
+<body data-page="catalog">
+  <div id="site-header"></div>
+  <main>
+    <section class="page-hero catalog-hero"><div class="shell"><span class="eyebrow">HCS PRODUCT CATALOG</span><h1>Find the right product with confidence.</h1><p>Complete details, stock information, favourites and easy WhatsApp ordering.</p></div></section>
+    <section class="section shell catalog-layout">
+      <aside class="filter-panel" id="filter-panel">
+        <div class="filter-head"><h2>Filters</h2><button id="close-filters" class="icon-button mobile-only" aria-label="Close filters"><i class="bi bi-x-lg"></i></button></div>
+        <label class="field-label" for="product-search">Search products</label>
+        <label class="search-field"><i class="bi bi-search"></i><input id="product-search" type="search" placeholder="Name, code or category"></label>
+        <label class="field-label" for="brand-filter">Brand</label>
+        <select id="brand-filter" class="select-field"><option value="">All brands</option></select>
+        <label class="field-label" for="stock-filter">Stock</label>
+        <select id="stock-filter" class="select-field"><option value="">All stock</option><option value="in">In stock</option><option value="out">Out of stock</option></select>
+        <label class="field-label" for="sort-products">Sort by</label>
+        <select id="sort-products" class="select-field"><option value="newest">Newest arrivals</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="alpha">Alphabetical A-Z</option></select>
+        <button id="reset-filters" class="button subtle full-width"><i class="bi bi-arrow-counterclockwise"></i> Clear all filters</button>
+      </aside>
+      <div class="catalog-main">
+        <div class="catalog-toolbar">
+          <div class="catalog-summary"><button id="open-filters" class="button subtle mobile-only"><i class="bi bi-funnel"></i> Filters</button><span id="product-count" class="result-count"></span></div>
+          <div class="view-actions" aria-label="Catalog view">
+            <button id="saved-only" class="saved-toggle" aria-pressed="false"><i class="bi bi-heart"></i> Saved <span id="saved-counter">0</span></button>
+            <button class="view-button active" data-view="grid" aria-label="Grid view"><i class="bi bi-grid-3x3-gap"></i></button>
+            <button class="view-button" data-view="list" aria-label="List view"><i class="bi bi-list-ul"></i></button>
+          </div>
+        </div>
+        <div id="active-filters" class="active-filters"></div>
+        <div id="products-grid" class="product-grid loading-grid" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+</body>
+</html>
