@@ -7,7 +7,741 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="css/styles.css"><script type="module" src="js/site.js"></script>
+  <style>
+:root{
+  --navy:#071a33;
+  --navy-2:#0d2c52;
+  --blue:#1469d8;
+  --blue-dark:#0d55b5;
+  --gold:#f5b82e;
+  --ink:#142033;
+  --muted:#66758b;
+  --line:#dce5f0;
+  --surface:#f4f7fb;
+  --white:#fff;
+  --success:#14804a;
+  --danger:#c93737;
+  --shadow:0 18px 50px rgba(7,26,51,.1);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--ink);background:var(--white);font-family:"Manrope",Arial,sans-serif;font-size:16px;line-height:1.6}
+body.modal-open{overflow:hidden}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.shell{width:min(1180px,calc(100% - 40px));margin-inline:auto}
+.top-strip{background:var(--navy);color:#d6e4f6;font-size:13px}
+.top-strip .shell{display:flex;justify-content:space-between;gap:18px;padding:7px 0}
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);border-bottom:1px solid rgba(220,229,240,.9);backdrop-filter:blur(16px)}
+.nav-wrap{height:78px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand{display:flex;align-items:center;gap:11px;min-width:max-content}
+.brand-mark{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--navy));box-shadow:0 8px 24px rgba(20,105,216,.24);color:#fff;font-weight:800;letter-spacing:-1px}
+.brand-copy{display:flex;flex-direction:column;line-height:1.2}.brand-copy b{font-size:17px}.brand-copy small{font-size:11px;color:var(--muted)}
+.desktop-nav{display:flex;align-items:center;gap:4px}.desktop-nav a{padding:10px 13px;border-radius:10px;color:#42526a;font-weight:700;font-size:14px}.desktop-nav a:hover,.desktop-nav a.active{color:var(--blue);background:#edf5ff}
+.header-actions{display:flex;align-items:center;gap:10px}.saved-link{display:flex;align-items:center;gap:7px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:14px;font-weight:700}.saved-link span{display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:20px;background:var(--blue);color:#fff;font-size:11px}
+.menu-toggle,.icon-button,.view-button{display:grid;place-items:center;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:11px}
+.menu-toggle{display:none;width:44px;height:44px;font-size:20px}.icon-button{width:40px;height:40px}.view-button{width:42px;height:42px;font-size:17px}.view-button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.mobile-nav{display:none;padding:0 20px 18px}.mobile-nav.open{display:grid}.mobile-nav a{padding:12px 4px;border-bottom:1px solid var(--line);font-weight:700}.mobile-nav a.active{color:var(--blue)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:11px 18px;border-radius:12px;border:1px solid transparent;font-weight:800;transition:.2s ease}.button:hover{transform:translateY(-1px)}
+.button.primary{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;box-shadow:0 10px 26px rgba(20,105,216,.23)}
+.button.secondary{border-color:#b7cae1;background:#fff;color:var(--navy)}
+.button.subtle{background:#f4f7fb;border-color:var(--line);color:var(--ink)}
+.button.gold{background:var(--gold);color:#142033}.button.full-width{width:100%;margin-top:18px}
+.button.small{min-height:39px;padding:8px 13px;font-size:13px}
+.button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.hero{overflow:hidden;background:radial-gradient(circle at 83% 15%,rgba(42,131,245,.24),transparent 28%),linear-gradient(140deg,#071a33 0%,#0b2b52 58%,#103d70 100%);color:#fff;padding:76px 0 70px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(300px,.6fr);align-items:center;gap:70px}
+.eyebrow{display:inline-block;color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.17em}.hero .eyebrow,.page-hero .eyebrow,.feature-band .eyebrow{color:#8fc2ff}
+.hero h1{max-width:760px;margin:13px 0 20px;font-size:clamp(38px,5vw,64px);line-height:1.08;letter-spacing:-.045em}.hero h1 span{color:var(--gold)}
+.hero-copy>p{max-width:720px;color:#c6d6e9;font-size:18px}.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin:30px 0 28px}.trust-row{display:flex;flex-wrap:wrap;gap:22px;color:#d7e4f5;font-size:13px}.trust-row span{display:flex;align-items:center;gap:7px}.trust-row i{color:var(--gold)}
+.hero-panel{position:relative;min-height:340px;padding:34px;border:1px solid rgba(255,255,255,.14);border-radius:26px;background:linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,255,255,.055));box-shadow:0 28px 70px rgba(0,0,0,.23);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}.hero-panel:after{content:"";position:absolute;width:220px;height:220px;right:-90px;top:-100px;border:36px solid rgba(245,184,46,.18);border-radius:50%}.panel-mark{width:78px;height:78px;display:grid;place-items:center;border-radius:22px;background:var(--gold);color:var(--navy);font-size:26px;font-weight:800}.panel-label{font-size:12px;letter-spacing:.14em;color:#9fc7f8;font-weight:800}.hero-panel h2{margin:8px 0 4px;font-size:28px;line-height:1.2}.hero-panel p{margin:0;color:#c1d4ea}.panel-contact{display:flex;align-items:center;gap:9px;font-weight:800;color:#fff}.panel-contact i{color:var(--gold)}
+.section{padding:76px 0}.surface-section{background:var(--surface)}
+.section-heading{margin-bottom:28px}.section-heading h2,.feature-band h2,.contact-details h2{margin:8px 0 0;font-size:clamp(28px,4vw,42px);line-height:1.2;letter-spacing:-.035em}.split-heading{display:flex;align-items:end;justify-content:space-between;gap:24px}.text-link{color:var(--blue);font-weight:800;white-space:nowrap}
+.card-grid{display:grid;gap:22px}.card-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.loading-grid:empty:after{content:"Loading...";grid-column:1/-1;padding:44px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:var(--radius)}
+.content-card{border:1px solid var(--line);border-radius:var(--radius);background:#fff;overflow:hidden;box-shadow:0 8px 30px rgba(7,26,51,.055);transition:.2s ease}.content-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.placeholder-image{display:grid;place-items:center;color:#8090a4;font-size:24px;font-weight:800}
+.image-button{position:relative;width:100%;height:220px;padding:0;border:0;background:#e9eff7;overflow:hidden;cursor:zoom-in}.image-button img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}.content-card:hover .image-button img,.product-card:hover .product-image img{transform:scale(1.035)}.image-hint{position:absolute;right:12px;bottom:12px;display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:22px;background:rgba(7,26,51,.78);color:#fff;font-size:11px;font-weight:700;backdrop-filter:blur(8px)}
+.card-body{padding:20px}.category{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.card-body h3{margin:7px 0 7px;font-size:19px;line-height:1.35}.card-body p{margin:0;color:var(--muted);font-size:14px}.card-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+.feature-band{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;padding:54px;border-radius:28px;background:linear-gradient(135deg,var(--navy),#10427a);color:#fff}.feature-band p{color:#c5d6ea}.featured-product .product-card{background:#fff;color:var(--ink)}
+.quick-links{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.quick-links>a{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:14px;padding:22px;border:1px solid var(--line);border-radius:var(--radius);transition:.2s}.quick-links>a:hover{border-color:#a9c7ec;background:#f7fbff;transform:translateY(-3px)}.quick-links>a>i:first-child{display:grid;place-items:center;width:45px;height:45px;border-radius:13px;background:#eaf3ff;color:var(--blue);font-size:20px}.quick-links span{display:flex;flex-direction:column}.quick-links small{color:var(--muted)}
+.page-hero{background:radial-gradient(circle at 84% 25%,rgba(67,151,255,.28),transparent 29%),linear-gradient(135deg,var(--navy),#0d3767);color:#fff;padding:70px 0}.page-hero h1{max-width:800px;margin:12px 0 14px;font-size:clamp(34px,5vw,54px);line-height:1.1;letter-spacing:-.04em}.page-hero p{max-width:760px;margin:0;color:#c9d8ea;font-size:17px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:26px}.simple-toolbar .search-field{max-width:560px;width:100%}.search-field{display:flex;align-items:center;gap:9px;min-height:46px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--muted)}.search-field:focus-within{border-color:#77aee9;box-shadow:0 0 0 3px rgba(20,105,216,.09)}.search-field input{width:100%;border:0;outline:0;background:transparent;color:var(--ink)}.result-count{color:var(--muted);font-size:14px;font-weight:700}
+.jobs-list{display:grid;gap:24px}.job-card{display:grid;grid-template-columns:330px minmax(0,1fr);border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 8px 30px rgba(7,26,51,.05)}.job-card .image-button{height:100%;min-height:340px}.job-content{padding:28px}.job-content h2{margin:7px 0 9px;font-size:25px;line-height:1.25}.job-content>p{color:var(--muted);white-space:pre-line}.job-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.meta-box{padding:13px;border-radius:12px;background:var(--surface)}.meta-box small{display:block;color:var(--muted);font-size:11px}.meta-box b{font-size:13px}.status{color:var(--success)}
+.download-group+.download-group{margin-top:48px}.download-group h2{font-size:28px;margin-bottom:18px}.empty-state{grid-column:1/-1;padding:50px 24px;text-align:center;border:1px dashed #b9c8da;border-radius:var(--radius);background:#fbfcfe;color:var(--muted)}.empty-state i{display:block;font-size:30px;color:#94a8bf;margin-bottom:8px}
+.catalog-layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:30px;align-items:start}.filter-panel{position:sticky;top:104px;padding:22px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 10px 35px rgba(7,26,51,.05)}.filter-head{display:flex;align-items:center;justify-content:space-between}.filter-head h2{margin:0 0 18px;font-size:21px}.field-label{display:block;margin:15px 0 7px;font-size:13px;font-weight:800}.select-field{width:100%;height:46px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}.select-field:focus{outline:3px solid rgba(20,105,216,.1);border-color:#77aee9}.catalog-toolbar{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}.catalog-summary,.view-actions{display:flex;align-items:center;gap:9px}.saved-toggle{display:flex;align-items:center;gap:7px;height:42px;padding:0 13px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-weight:700}.saved-toggle[aria-pressed="true"]{background:#fff0f3;border-color:#f3a6b6;color:#b92849}.saved-toggle span{display:grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border-radius:20px;background:#eaf0f7;font-size:11px}.active-filters{display:flex;flex-wrap:wrap;gap:8px;min-height:10px;margin:0 0 18px}.filter-chip{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:30px;background:#eaf3ff;color:var(--blue-dark);font-size:12px;font-weight:700}.product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.product-grid.list-view{grid-template-columns:1fr}.product-card{position:relative;border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden;box-shadow:0 8px 30px rgba(7,26,51,.055);transition:.2s}.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}.product-image{position:relative;width:100%;height:235px;border:0;padding:0;background:#eef3f8;overflow:hidden;cursor:zoom-in}.product-image img{width:100%;height:100%;object-fit:contain;padding:12px;transition:transform .35s ease}.product-badges{position:absolute;left:12px;top:12px;display:flex;gap:6px}.badge{display:inline-flex;padding:6px 9px;border-radius:20px;background:var(--navy);color:#fff;font-size:10px;font-weight:800}.badge.new{background:var(--gold);color:var(--navy)}.favourite-button{position:absolute;right:12px;top:12px;z-index:2;width:40px;height:40px;display:grid;place-items:center;border:1px solid rgba(220,229,240,.9);border-radius:50%;background:rgba(255,255,255,.92);font-size:18px}.favourite-button.saved{color:#cf3154;background:#fff0f3}.product-body{padding:18px}.product-code{color:var(--muted);font-size:11px;font-weight:700}.product-body h3{margin:6px 0 8px;font-size:17px;line-height:1.35}.product-brand{color:var(--muted);font-size:12px}.price-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0}.price{font-size:21px;font-weight:800;color:var(--navy)}.stock{font-size:11px;font-weight:800;color:var(--success)}.stock.out{color:var(--danger)}.product-actions{display:grid;grid-template-columns:1fr auto auto;gap:8px}.product-actions .icon-button{height:44px}.product-grid.list-view .product-card{display:grid;grid-template-columns:260px 1fr}.product-grid.list-view .product-image{height:100%;min-height:260px}.product-grid.list-view .product-body{padding:25px}.product-grid.list-view .product-actions{max-width:420px}
+.contact-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:60px;align-items:start}.contact-details>p{color:var(--muted)}.contact-list{display:grid;gap:14px;margin:28px 0}.contact-list>div{display:flex;gap:13px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:14px}.contact-list i{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#eaf3ff;color:var(--blue);font-size:18px}.contact-list span{display:flex;flex-direction:column}.contact-list small{color:var(--muted)}.contact-card{padding:30px;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:var(--shadow)}.contact-card h2{margin:0}.contact-card>p{color:var(--muted)}.contact-form{display:grid;gap:15px}.contact-form label{display:grid;gap:7px;font-size:13px;font-weight:800}.contact-form input,.contact-form textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;outline:0;color:var(--ink);resize:vertical}.contact-form input:focus,.contact-form textarea:focus{border-color:#77aee9;box-shadow:0 0 0 3px rgba(20,105,216,.09)}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.hp-field{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important}.form-status{min-height:24px;margin:0;font-size:13px}.form-status.success{color:var(--success)}.form-status.error{color:var(--danger)}
+.site-footer{background:var(--navy);color:#fff;margin-top:30px}.footer-main{display:grid;grid-template-columns:.8fr 1.25fr;gap:60px;padding:58px 0}.footer-info p{max-width:420px;color:#aebfd3}.footer-info .brand-copy small{color:#aebfd3}.footer-form-wrap{padding:24px;border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.055)}.footer-form-wrap h2{margin:0 0 4px;font-size:22px}.footer-form-wrap>p{margin:0 0 18px;color:#aebfd3;font-size:13px}.footer-form-wrap .contact-form input,.footer-form-wrap .contact-form textarea{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#fff}.footer-form-wrap .contact-form input::placeholder,.footer-form-wrap .contact-form textarea::placeholder{color:#91a4bb}.footer-form-wrap .contact-form label{color:#dce7f4}.footer-form-wrap .form-row{grid-template-columns:1fr 1fr}.footer-links{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:28px}.footer-links h3{font-size:14px}.footer-links a,.footer-links span{display:block;margin:8px 0;color:#afc0d4;font-size:13px}.footer-bottom{border-top:1px solid rgba(255,255,255,.11);padding:19px 0;color:#91a5bc;font-size:12px}.footer-bottom .shell{display:flex;justify-content:space-between;gap:20px}.footer-bottom a{color:#b9c9dc}.social-links{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}.social-link{display:flex;align-items:center;gap:8px;min-height:42px;padding:9px 12px;border:1px solid rgba(255,255,255,.16);border-radius:11px;color:#e8f0fa;background:rgba(255,255,255,.07);font-size:13px;font-weight:700}.contact-details .social-link{border-color:var(--line);background:#fff;color:var(--ink)}.social-link:hover{border-color:#79aff0;color:#fff;background:var(--blue)}.contact-details .social-link:hover{color:#fff}.social-link.disabled{opacity:.65;cursor:not-allowed}.social-links-large .social-link{min-height:46px}
+.modal{position:fixed;inset:0;z-index:100;display:none}.modal.open{display:grid}.modal-backdrop{position:absolute;inset:0;background:rgba(1,8,18,.88);backdrop-filter:blur(9px)}.lightbox-dialog{position:relative;z-index:1;width:100%;height:100%;display:grid;grid-template-rows:auto 1fr auto;padding:15px;color:#fff}.lightbox-top,.lightbox-controls{display:flex;align-items:center;justify-content:center;gap:8px;z-index:2}.lightbox-top{justify-content:space-between;padding:2px 8px}.lightbox-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}.lightbox-stage{position:relative;display:grid;place-items:center;overflow:hidden;touch-action:none}.lightbox-stage img{max-width:calc(100vw - 32px);max-height:calc(100vh - 150px);width:auto;height:auto;object-fit:contain;transform-origin:center;user-select:none;-webkit-user-drag:none;cursor:grab}.lightbox-stage img:active{cursor:grabbing}.lightbox-controls{padding:10px}.lightbox-controls button,.lightbox-top button{width:43px;height:43px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.2);border-radius:11px;background:rgba(255,255,255,.11);color:#fff}.zoom-level{min-width:60px;text-align:center;font-size:12px}.product-modal-card{position:relative;z-index:1;width:min(920px,calc(100% - 30px));max-height:calc(100vh - 40px);margin:auto;overflow:auto;border-radius:22px;background:#fff;box-shadow:0 30px 90px rgba(0,0,0,.35)}.product-modal-close{position:sticky;float:right;top:12px;right:12px;z-index:3;margin:12px}.product-detail{display:grid;grid-template-columns:1fr 1.1fr}.product-detail-image{display:grid;place-items:center;min-height:440px;background:#f0f4f9}.product-detail-image img{max-height:430px;object-fit:contain;cursor:zoom-in}.product-detail-copy{padding:42px 34px}.product-detail-copy h2{margin:8px 0;font-size:30px;line-height:1.2}.product-detail-copy .price{display:block;margin:14px 0}.spec-list{margin:18px 0;padding:0;list-style:none}.spec-list li{position:relative;padding:6px 0 6px 22px;color:#53647b}.spec-list li:before{content:"✓";position:absolute;left:0;color:var(--success);font-weight:800}.mobile-only{display:none}
+.toast{position:fixed;left:50%;bottom:24px;z-index:150;max-width:calc(100% - 28px);padding:11px 16px;border-radius:11px;background:var(--navy);color:#fff;box-shadow:var(--shadow);font-size:13px;font-weight:700;opacity:0;transform:translate(-50%,20px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:1020px){
+  .desktop-nav{display:none}.menu-toggle{display:grid}.hero-grid{grid-template-columns:1fr .65fr;gap:32px}.card-grid-3,.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-links{grid-template-columns:1fr 1fr}.feature-band{grid-template-columns:1fr;gap:30px}.job-card{grid-template-columns:280px 1fr}.footer-main{grid-template-columns:1fr 1fr;gap:35px}.catalog-layout{grid-template-columns:230px 1fr}.product-grid.list-view .product-card{grid-template-columns:220px 1fr}
+}
+@media(max-width:780px){
+  .shell{width:min(100% - 28px,680px)}.top-strip .shell{justify-content:center}.top-strip .shell span:first-child{display:none}.nav-wrap{height:68px}.brand-copy small{display:none}.header-actions .saved-link{display:none}.hero{padding:54px 0}.hero-grid{grid-template-columns:1fr}.hero-panel{min-height:250px}.section{padding:54px 0}.card-grid-3{grid-template-columns:repeat(2,minmax(0,1fr))}.image-button{height:190px}.feature-band{padding:30px}.quick-links{grid-template-columns:1fr}.page-hero{padding:52px 0}.job-card{grid-template-columns:1fr}.job-card .image-button{height:300px;min-height:0}.job-meta{grid-template-columns:1fr 1fr}.catalog-layout{display:block}.filter-panel{position:fixed;inset:0 0 0 auto;width:min(88vw,330px);z-index:90;border-radius:0;transform:translateX(110%);transition:transform .25s ease;overflow:auto}.filter-panel.open{transform:translateX(0);box-shadow:-20px 0 70px rgba(0,0,0,.25)}.mobile-only{display:inline-flex}.filter-head .mobile-only{display:grid}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.product-grid.list-view .product-card{grid-template-columns:190px 1fr}.product-grid.list-view .product-image{min-height:230px}.contact-layout{grid-template-columns:1fr}.footer-main{grid-template-columns:1fr}.footer-form-wrap .form-row{grid-template-columns:1fr 1fr}.product-detail{grid-template-columns:1fr}.product-detail-image{min-height:280px}.product-detail-image img{max-height:280px}
+}
+@media(max-width:540px){
+  body{font-size:15px}.shell{width:calc(100% - 24px)}.brand-mark{width:42px;height:42px}.brand-copy b{font-size:14px}.hero h1{font-size:38px}.hero-copy>p{font-size:16px}.hero-actions .button{width:100%}.trust-row{display:grid;gap:9px}.hero-panel{padding:24px}.section-heading.split-heading{display:block}.section-heading .text-link{display:inline-block;margin-top:12px}.card-grid-3,.product-grid{grid-template-columns:1fr}.image-button,.product-image{height:235px}.job-card .image-button{height:250px}.job-content{padding:20px}.job-meta{grid-template-columns:1fr}.product-grid.list-view .product-card{display:block}.product-grid.list-view .product-image{height:235px}.product-actions{grid-template-columns:1fr auto auto}.catalog-toolbar{align-items:flex-start}.view-actions .view-button{display:none}.form-row,.footer-form-wrap .form-row{grid-template-columns:1fr}.contact-card{padding:22px}.footer-links{grid-template-columns:1fr}.footer-bottom .shell{display:block}.product-detail-copy{padding:28px 22px}.lightbox-dialog{padding:8px}.lightbox-stage img{max-width:calc(100vw - 16px);max-height:calc(100vh - 135px)}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+</style><script>window.HCS_INLINE_DATA={
+  "settings": {
+    "site": "HCS",
+    "shop": "Hannan Computers & Printers",
+    "phone": "0334-6395391",
+    "address": "Bangla Chowk Mamukanjan",
+    "WhatsAppChannel": "",
+    "YouTube": "",
+    "Facebook": "",
+    "Instagram": "",
+    "TikTok": ""
+  },
+  "services": [
+    {
+      "ID": "SV1",
+      "Title": "Black & White Photocopies & Prints",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1biflUGZr36XanDv98NPmFvPlQnpcD0Oi&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Black & White Photocopies & Prints service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV2",
+      "Title": "Color Photocopies & Prints",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=157-Pu9w77rwRRE1rSF1F7TF7136rcDUM&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Color Photocopies & Prints service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV3",
+      "Title": "Educational & Jobs Info",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=14Yy0d_F7zTr0IQfMcIIORScpupOBkajs&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Educational & Jobs Info service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV4",
+      "Title": "Online Services",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1R4PMoYoHEdGZu3Sw8EbsF30K_0bxs9Vp&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Online Services service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV5",
+      "Title": "Computer Sale & Service",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1xU9MGRp3d3PshUOSMz2iQSE-IS21YtRq&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Computer Sale & Service service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV6",
+      "Title": "FBR Services",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1MXy6ixuSdAsyuZPTLkzn6F_Wd7gix0WS&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe NADRA e-Sahulat service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV7",
+      "Title": "Photo Studio",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1HamcP88lv2oIODtb5yQbikAWtJ5Fcvf-&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Photo Studio service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV8",
+      "Title": "Software / Windows / Hardware",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1DI30f7iFovUbBzZ8pTSJbDHEeJclN0Rh&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Software / Windows / Hardware service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV9",
+      "Title": "Govt New Schemes",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1Hktkh50b60cctOc32-ij4L6kpgsaQXJH&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Govt New Schemes service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV10",
+      "Title": "Online Apply",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1kK8ZVmCjpQc1wDfDoGJk6Ecu7LBYYjfq&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Online Apply service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV11",
+      "Title": "Panaflex Printing",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1s2mChotw-riZaw2lA_URVCgeSUXqQ83o&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Panaflex Printing service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV12",
+      "Title": "Wedding Cards",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1C7x0NtDpFNuQ-qd3syM75SfaRlwEIAjU&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Wedding Cards service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV13",
+      "Title": "Visiting Cards",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=18MRB4y9wwoGwNSs8tJhmKvI7DjfDkKca&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Visiting Cards service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV14",
+      "Title": "Stamps",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1l0rY8gh1gZOBMT055QwnK45R9KDOtKwu&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Stamps service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV15",
+      "Title": "Brochures",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1n7JSmgVlr07Vhej33JKYfw3-V4FscNZp&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Brochures service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV16",
+      "Title": "Stickers",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=11NgMAQIn_qrnT-XAjiDbMCLsuzrwlvS1&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Stickers service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV17",
+      "Title": "PVC Cards",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1L5Z4iIYgObp338g0n0b941gpCm4IASbs&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe PVC Cards service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV18",
+      "Title": "Staff Cards",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1XzxHgPok84vE2JBNLgyo5tOMJHIHzOtf&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Staff Cards service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV19",
+      "Title": "Student Cards",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1OwpMWzPUiqGvc49emtHawOUoYbUFeSZV&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Student Cards service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV20",
+      "Title": "Fee Cards",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1aQQ13Y3nrdGXXKpigvGkN7ufrRhS8shN&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Fee Cards service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV21",
+      "Title": "Scanning",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1Fiunfn5nvoAArwISEByzz9uc8cTcQ7lM&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Scanning service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV22",
+      "Title": "Toner Refill",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=18Fs_iUiEEsQf407uCHSpaxNa1IbLAJgY&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Toner Refill service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV23",
+      "Title": "Excise Services",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1Vywzc3yoEwQNvoQY8rcvni4blCou-LMx&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Excise Services service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV24",
+      "Title": "Token Tax",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1EFPYRavnPwjsvLllI5ASHvaiwgMj9AqC&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Token Tax service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV25",
+      "Title": "Books Binding",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1-6THZ-Mc3zoZ0IJkPZ8fr2k3SCYpr5wD&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Books Binding service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV26",
+      "Title": "CV Making",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1ZuJChC_O1hPKIpt4dzxkI4rVkVDpXBf8&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe CV Making service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV27",
+      "Title": "Composing",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1OspIfzQK_QErNBsBOn371MT_eTXqRl0I&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Composing service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV28",
+      "Title": "Software Development For Schools",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1qupQDLqMr20zWFZnBhHGMtbzZfbwXAOF&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Software Development For Schools service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SV29",
+      "Title": "Online Marketing",
+      "Category": "HCS Services",
+      "Description": "Professional service by Hannan Computers & Printers",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1eS-Zn_PYEDehPUAz1icc_fkoGUtIY7z9&export=view&authuser=0",
+      "WhatsAppText": "Assalam-o-Alaikum, mujhe Online Marketing service ke bare mein maloomat chahiye.",
+      "Active": true
+    },
+    {
+      "ID": "SE5d3a83d1",
+      "Title": "Business Advertisment",
+      "Category": "HCS SERVICES",
+      "Description": "Complete Business Advertisment Solution\n\nOnline & Offline",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1_rkgTAPya8JvL_n-zxKU88wl12T_wJJQ&export=view&authuser=0",
+      "WhatsAppText": "Mujhe apne business ke liye advertisement karwani hai.",
+      "Active": true
+    }
+  ],
+  "jobs": [
+    {
+      "ID": "JO9640d4e2",
+      "Title": "CHIEF MINISTER'S INSPECTION TEAM (CMIT)",
+      "Department": "PPSC Jobs 2026 — CMIT Vacancies",
+      "Location": "Punjab",
+      "Qualification": "16 Years Master",
+      "AdDate": "2026-08-25",
+      "LastDate": "2026-09-03",
+      "ExtendedDate": "",
+      "ApplyLink": "https://www.ppsc.gop.pk/(S(ulotxso5xkc4c0kkkwbe5vbg))/jobs.aspx",
+      "AdURL": "",
+      "Description": "PPSC Jobs 2026 – CMIT Vacancies\n\nPunjab Public Service Commission (PPSC) ke zariye Chief Minister’s Inspection Team (CMIT) mein multiple vacancies announce ki gayi hain.\n\nAvailable Positions:\n\nAssistant Director Inspection\nOffice Assistant\n\nTotal Seats: 46\nQualification: Kisi bhi subject mein 16 years education\nAge Limit: Male candidates ke liye 33 years aur female candidates ke liye 36 years\nLast Date: 03 September 2026\n\nEligible male aur female candidates last date se pehle online apply karein. Apply karne se pehle official advertisement mein required qualification, experience, age relaxation aur tamam terms and conditions zaroor check karein.",
+      "Status": "Auto",
+      "BannerURL": "https://drive.usercontent.google.com/download?id=1pcTo10aq3tT09NaIMiQFZAtm-IO23ENx&export=view&authuser=0",
+      "OfficialAdURL": "https://drive.google.com/file/d/1iXw3wdzslUz9GKMpwP3gOXObeRhl_SKQ/view",
+      "Category": "Government Jobs",
+      "CreatedAt": "2026-08-29",
+      "ComputedStatus": "Closing Soon"
+    }
+  ],
+  "downloads": [],
+  "products": [
+    {
+      "ID": "PR945f31f0",
+      "Title": "",
+      "Category": "COMPUTER ACCESSORIES ",
+      "Price": 1299,
+      "Description": "",
+      "ImageURL": "https://drive.usercontent.google.com/download?id=1N6zVJ82_9gXoYQW46C7Btu_t8CGxF_CJ&export=view&authuser=0",
+      "WhatsAppText": "A8 SPEAKER DETAILS RS.1299",
+      "Active": true,
+      "ItemName": "A8 USB2.0 MOBILE DESKTOP SPEAKER",
+      "Brand": "CHINA",
+      "ProductDetails": "• Clear and balanced stereo sound\n• Enhanced bass performance\n• USB 2.0 powered\n• Quick plug-and-play setup\n• Compact and space-saving design\n• Stylish black and red finish\n• Suitable for desktop computers and laptops",
+      "StockStatus": "In Stock",
+      "Quantity": 10,
+      "CreatedAt": "2026-09-01"
+    }
+  ]
+}
+;</script>
+<script type="module">
+const CFG = {
+  SELF_CONTAINED: true,
+  BACKEND_URL: "https://script.google.com/macros/s/AKfycby-ILsCMUcD4_25OSwKAnAG7ajyjXbKfFmFxAmXTDfzxS3bvyWaZN2cJYrDKK7JJD55/exec",
+  CONTACT_EMAIL: "alhannancomputers@gmail.com",
+  WHATSAPP_NUMBER: "923346395391",
+  SOCIAL_LINKS: {
+    youtube: "",
+    facebook: "",
+    instagram: "",
+    whatsapp: "https://wa.me/923346395391",
+    tiktok: ""
+  }
+};
+
+(function(){
+  "use strict";
+
+  const PAGE=document.body.dataset.page||"home";
+  let DATA={settings:{},services:[],jobs:[],downloads:[],products:[]};
+  let favourites=new Set(JSON.parse(localStorage.getItem("hcs-favourites")||"[]"));
+  const catalogState={search:"",brand:"",stock:"",sort:"newest",view:localStorage.getItem("hcs-catalog-view")||"grid",savedOnly:false};
+
+  const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+  const cleanId=value=>String(value||"").replace(/[^a-zA-Z0-9_-]/g,"");
+  const productName=p=>p.ItemName||p.Title||"HCS Product";
+  const money=value=>Number(value||0).toLocaleString("en-PK");
+  const socialMeta={
+    youtube:{label:"YouTube",icon:"bi-youtube"},
+    facebook:{label:"Facebook",icon:"bi-facebook"},
+    instagram:{label:"Instagram",icon:"bi-instagram"},
+    whatsapp:{label:"WhatsApp",icon:"bi-whatsapp"},
+    tiktok:{label:"TikTok",icon:"bi-tiktok"}
+  };
+
+  function navLink(file,label,key){return `<a href="${file}" class="${PAGE===key?"active":""}">${label}</a>`}
+
+  function renderLayout(){
+    const header=document.getElementById("site-header");
+    const footer=document.getElementById("site-footer");
+    if(header)header.innerHTML=`
+      <div class="top-strip"><div class="shell"><span>Hannan Computers & Printers - Bangla Chowk Mamukanjan</span><span><i class="bi bi-whatsapp"></i> 0334-6395391</span></div></div>
+      <header class="site-header">
+        <div class="shell nav-wrap">
+          <a class="brand" href="index.html" aria-label="HCS home"><span class="brand-mark">HCS</span><span class="brand-copy"><b>Hannan Computers</b><small>& Printers</small></span></a>
+          <nav class="desktop-nav" aria-label="Main navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
+          <div class="header-actions"><a class="saved-link" href="catalog.html?saved=1"><i class="bi bi-heart"></i> Saved <span data-saved-count>${favourites.size}</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><i class="bi bi-list"></i></button></div>
+        </div>
+        <nav class="mobile-nav" aria-label="Mobile navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
+      </header>`;
+    if(footer)footer.innerHTML=`
+      <footer class="site-footer">
+        <div class="shell footer-main">
+          <div class="footer-info">
+            <a class="brand" href="index.html"><span class="brand-mark">HCS</span><span class="brand-copy"><b>Hannan Computers & Printers</b><small>Professional local services</small></span></a>
+            <p>Printing, online applications, computer services, job information and quality products - managed professionally in Mamukanjan.</p>
+            <div class="social-links" data-social-links></div>
+            <div class="footer-links"><div><h3>Quick Links</h3><a href="services.html">Services</a><a href="jobs.html">Latest Jobs</a><a href="catalog.html">Product Catalog</a></div><div><h3>Contact</h3><span data-setting="address">Bangla Chowk Mamukanjan</span><span data-setting="phone">0334-6395391</span><a href="mailto:${esc(CFG.CONTACT_EMAIL||"alhannancomputers@gmail.com")}">${esc(CFG.CONTACT_EMAIL||"alhannancomputers@gmail.com")}</a></div></div>
+          </div>
+          <div class="footer-form-wrap">
+            <h2>Contact Us</h2><p>This form sends your message directly to our email inbox.</p>
+            <form class="contact-form" data-contact-form>
+              <div class="form-row"><label>Name<input name="name" required maxlength="80" autocomplete="name" placeholder="Your name"></label><label>Phone<input name="phone" required maxlength="30" inputmode="tel" autocomplete="tel" placeholder="03xx xxxxxxx"></label></div>
+              <label>Message<textarea name="message" required maxlength="2000" rows="4" placeholder="How can we help?"></textarea></label>
+              <input type="hidden" name="subject" value="Website footer contact message"><input class="hp-field" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+              <button class="button gold" type="submit"><i class="bi bi-envelope"></i> Send to Email</button><p class="form-status" role="status"></p>
+            </form>
+          </div>
+        </div>
+        <div class="footer-bottom"><div class="shell"><span>© ${new Date().getFullYear()} HCS - Hannan Computers & Printers</span><a href="${esc(CFG.BACKEND_URL||"#")}" target="_blank" rel="noopener">Admin</a></div></div>
+      </footer>`;
+
+    const toggle=document.querySelector(".menu-toggle");
+    const mobile=document.querySelector(".mobile-nav");
+    toggle?.addEventListener("click",()=>{const open=mobile.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open));toggle.innerHTML=`<i class="bi ${open?"bi-x-lg":"bi-list"}"></i>`});
+    document.querySelectorAll("[data-contact-form]").forEach(bindContactForm);
+    renderSocialLinks();
+  }
+
+  function mergedSocialLinks(){
+    const s=DATA.settings||{};
+    const configured=CFG.SOCIAL_LINKS||{};
+    return {
+      youtube:s.YouTube||s.youtube||configured.youtube||"",
+      facebook:s.Facebook||s.facebook||configured.facebook||"",
+      instagram:s.Instagram||s.instagram||configured.instagram||"",
+      whatsapp:s.WhatsAppChannel||s.whatsapp||configured.whatsapp||"",
+      tiktok:s.TikTok||s.tiktok||configured.tiktok||""
+    };
+  }
+
+  function renderSocialLinks(){
+    const links=mergedSocialLinks();
+    document.querySelectorAll("[data-social-links]").forEach(container=>{
+      container.innerHTML=Object.entries(socialMeta).map(([key,meta])=>{
+        const url=links[key];
+        return `<a class="social-link ${url?"":"disabled"}" href="${esc(url||"#")}" ${url?'target="_blank" rel="noopener"':'aria-disabled="true" data-empty-social="true"'} title="${url?meta.label:meta.label+" link will be added soon"}"><i class="bi ${meta.icon}"></i><span>${meta.label}</span></a>`;
+      }).join("");
+    });
+  }
+
+  function bindContactForm(form){
+    form.addEventListener("submit",async event=>{
+      event.preventDefault();
+      const status=form.querySelector(".form-status");
+      const button=form.querySelector("button[type=submit]");
+      const payload=new URLSearchParams(new FormData(form));
+      payload.set("action","contact");payload.set("page",location.href);payload.set("recipient",CFG.CONTACT_EMAIL||"alhannancomputers@gmail.com");
+      if(payload.get("company"))return;
+      if(!CFG.BACKEND_URL||!CFG.BACKEND_URL.startsWith("http")){status.className="form-status error";status.textContent="Email service is not configured yet.";return}
+      button.disabled=true;status.className="form-status";status.textContent="Sending your message...";
+      try{
+        await fetch(CFG.BACKEND_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:payload.toString()});
+        form.reset();status.className="form-status success";status.textContent="Message sent successfully by email. Thank you!";
+      }catch(error){status.className="form-status error";status.textContent="Message could not be sent. Please try again."}
+      finally{button.disabled=false}
+    });
+  }
+
+  function remoteImage(url){
+    const text=String(url||"").trim();
+    const match=text.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/)||text.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    return match?`https://drive.google.com/thumbnail?id=${match[1]}&sz=w1600`:text;
+  }
+
+  function localImage(item,group,field="ImageURL"){
+    if(CFG.SELF_CONTAINED)return remoteImage(item[field]);
+    const id=cleanId(item.ID);if(!id)return remoteImage(item[field]);
+    if(group==="services")return `assets/services/${id}-ImageURL.jpg`;
+    if(group==="products")return `assets/products/${id}-ImageURL.jpg`;
+    if(group==="jobs"&&field==="BannerURL")return `assets/jobs/${id}-BannerURL.jpg`;
+    return remoteImage(item[field]);
+  }
+
+  function imageButton(item,group,title,field="ImageURL",className="image-button"){
+    const local=localImage(item,group,field),fallback=remoteImage(item[field]);
+    if(!local)return `<div class="${className} placeholder-image"><span>HCS</span></div>`;
+    return `<button class="${className}" type="button" data-lightbox-src="${esc(local)}" data-lightbox-title="${esc(title)}" aria-label="Open complete image of ${esc(title)}"><img src="${esc(local)}" data-fallback="${esc(fallback)}" alt="${esc(title)}" loading="lazy"><span class="image-hint"><i class="bi bi-arrows-fullscreen"></i> View & zoom</span></button>`;
+  }
+
+  function serviceCard(item){
+    const title=item.Title||"HCS Service";
+    return `<article class="content-card">${imageButton(item,"services",title)}<div class="card-body"><span class="category">${esc(item.Category||"HCS Service")}</span><h3>${esc(title)}</h3><p>${esc(item.Description||"Professional service by HCS.")}</p><div class="card-actions"><a class="button primary small" href="${waUrl(item.WhatsAppText||`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ask Details</a></div></div></article>`;
+  }
+
+  function waUrl(message){return `https://wa.me/${encodeURIComponent(String(CFG.WHATSAPP_NUMBER||"923346395391").replace(/\D/g,""))}?text=${encodeURIComponent(message||"")}`}
+
+  function productCard(item){
+    const title=productName(item),saved=favourites.has(String(item.ID)),stock=isInStock(item),isNew=isNewArrival(item);
+    return `<article class="product-card" data-product-id="${esc(item.ID)}">
+      <button class="favourite-button ${saved?"saved":""}" type="button" data-favourite="${esc(item.ID)}" aria-label="${saved?"Remove from":"Save to"} favourites"><i class="bi ${saved?"bi-heart-fill":"bi-heart"}"></i></button>
+      <div class="product-badges">${isNew?'<span class="badge new">New Arrival</span>':""}<span class="badge">${esc(item.Category||"Product")}</span></div>
+      ${imageButton(item,"products",title,"ImageURL","product-image")}
+      <div class="product-body"><span class="product-code">Product Code: ${esc(item.ID||"N/A")}</span><h3>${esc(title)}</h3><div class="product-brand">Brand: ${esc(item.Brand||"HCS")}</div><div class="price-row"><span class="price">Rs ${money(item.Price)}</span><span class="stock ${stock?"":"out"}">${stock?"In Stock":"Out of Stock"}</span></div>
+      <div class="product-actions"><button class="button primary small" type="button" data-details="${esc(item.ID)}">View Details</button><button class="icon-button" type="button" data-share-product="${esc(item.ID)}" aria-label="Share product"><i class="bi bi-share"></i></button><a class="icon-button" href="${waUrl(item.WhatsAppText||`Mujhe ${title} (${item.ID}) order karna hai.`)}" target="_blank" rel="noopener" aria-label="Order on WhatsApp"><i class="bi bi-whatsapp"></i></a></div></div>
+    </article>`;
+  }
+
+  function isInStock(item){
+    const status=String(item.StockStatus||"").toLowerCase();
+    if(/out|unavailable|sold/.test(status)||Number(item.Quantity)===0)return false;
+    return true;
+  }
+
+  function isNewArrival(item){
+    if(!item.CreatedAt)return false;
+    const created=new Date(item.CreatedAt);if(Number.isNaN(created.getTime()))return false;
+    return (Date.now()-created.getTime())/(86400000)<=60;
+  }
+
+  async function loadData(){
+    if(window.HCS_INLINE_DATA){
+      DATA=window.HCS_INLINE_DATA;renderPage();applySettings();
+    }else{
+      try{
+        const response=await fetch("data/live-data.json",{cache:"no-store"});
+        if(response.ok){DATA=await response.json();renderPage();applySettings()}
+      }catch(error){renderPage()}
+    }
+    if(CFG.BACKEND_URL&&CFG.BACKEND_URL.startsWith("http"))loadRemoteData();
+  }
+
+  function loadRemoteData(){
+    const script=document.createElement("script");
+    const cleanup=()=>script.remove();
+    window.hcsDataCallback=data=>{if(data&&!data.error){DATA=data;renderPage();applySettings()}cleanup()};
+    script.src=`${CFG.BACKEND_URL}${CFG.BACKEND_URL.includes("?")?"&":"?"}api=public&callback=hcsDataCallback&_=${Date.now()}`;
+    script.onerror=cleanup;document.body.appendChild(script);setTimeout(cleanup,9000);
+  }
+
+  function applySettings(){
+    const s=DATA.settings||{};
+    document.querySelectorAll('[data-setting="address"]').forEach(el=>el.textContent=s.address||s.Address||"Bangla Chowk Mamukanjan");
+    document.querySelectorAll('[data-setting="phone"]').forEach(el=>el.textContent=s.phone||s.Phone||"0334-6395391");
+    renderSocialLinks();
+  }
+
+  function renderPage(){
+    if(PAGE==="home")renderHome();
+    if(PAGE==="services")renderServices();
+    if(PAGE==="jobs")renderJobs();
+    if(PAGE==="downloads")renderDownloads();
+    if(PAGE==="catalog")renderCatalog();
+  }
+
+  function renderHome(){
+    const services=document.getElementById("home-services");if(services)services.innerHTML=(DATA.services||[]).slice(0,3).map(serviceCard).join("")||empty("Services will appear here soon.","bi-grid");
+    const product=document.getElementById("home-product");if(product)product.innerHTML=(DATA.products||[]).length?productCard(DATA.products[0]):empty("Products will appear here soon.","bi-bag");
+  }
+
+  function renderServices(){
+    const grid=document.getElementById("services-grid"),input=document.getElementById("service-search");if(!grid)return;
+    const draw=()=>{const q=String(input?.value||"").trim().toLowerCase();const rows=(DATA.services||[]).filter(x=>[x.Title,x.Category,x.Description].join(" ").toLowerCase().includes(q));grid.innerHTML=rows.map(serviceCard).join("")||empty("No matching services found.","bi-search");document.getElementById("service-count").textContent=`${rows.length} service${rows.length===1?"":"s"}`};
+    if(input&&!input.dataset.bound){input.addEventListener("input",draw);input.dataset.bound="1"}draw();
+  }
+
+  function renderJobs(){
+    const list=document.getElementById("jobs-list"),input=document.getElementById("job-search");if(!list)return;
+    const draw=()=>{const q=String(input?.value||"").trim().toLowerCase();const rows=(DATA.jobs||[]).filter(x=>[x.Title,x.Department,x.Location,x.Qualification].join(" ").toLowerCase().includes(q));list.innerHTML=rows.map(job=>{
+      const title=job.Title||"Job Opportunity";
+      return `<article class="job-card">${imageButton(job,"jobs",title,"BannerURL")}<div class="job-content"><span class="category">${esc(job.Department||"Job Opportunity")}</span><h2>${esc(title)}</h2><p>${esc(job.Description||job.Qualification||"")}</p><div class="job-meta"><div class="meta-box"><small>Qualification</small><b>${esc(job.Qualification||"See advertisement")}</b></div><div class="meta-box"><small>Last Date</small><b>${esc(job.ExtendedDate||job.LastDate||"Not specified")}</b></div><div class="meta-box"><small>Status</small><b class="status">${esc(job.ComputedStatus||job.Status||"Open")}</b></div></div><div class="card-actions">${job.ApplyLink?`<a class="button primary small" href="${esc(job.ApplyLink)}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Apply Officially</a>`:""}${job.OfficialAdURL?`<a class="button subtle small" href="${esc(job.OfficialAdURL)}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> Full Advertisement</a>`:""}<a class="button subtle small" href="${waUrl(`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ask HCS</a></div></div></article>`;
+    }).join("")||empty("No matching jobs found.","bi-briefcase");document.getElementById("job-count").textContent=`${rows.length} job${rows.length===1?"":"s"}`};
+    if(input&&!input.dataset.bound){input.addEventListener("input",draw);input.dataset.bound="1"}draw();
+  }
+
+  function renderDownloads(){
+    const root=document.getElementById("downloads-content");if(!root)return;
+    const groups=[{title:"Software & Tools",rows:(DATA.downloads||[]).filter(x=>String(x.Category||"").toLowerCase()!=="customer data")},{title:"Customer Data",rows:(DATA.downloads||[]).filter(x=>String(x.Category||"").toLowerCase()==="customer data")}];
+    root.innerHTML=groups.map(group=>`<section class="download-group"><h2>${group.title}</h2><div class="card-grid card-grid-3">${group.rows.map(item=>`<article class="content-card">${item.ImageURL?imageButton(item,"downloads",item.Title||"Download"):""}<div class="card-body"><span class="category">${esc(item.Category||"Download")}</span><h3>${esc(item.Title||"Download")}</h3><p>${esc(item.Description||"")}</p><div class="card-actions">${item.URL?`<a class="button primary small" href="${esc(item.URL)}" target="_blank" rel="noopener"><i class="bi bi-download"></i> Download</a>`:""}</div></div></article>`).join("")||empty("No files added yet.","bi-cloud-arrow-down")}</div></section>`).join("");
+  }
+
+  function empty(message,icon){return `<div class="empty-state"><i class="bi ${icon}"></i>${esc(message)}</div>`}
+
+  function setupCatalog(){
+    if(PAGE!=="catalog")return;
+    const params=new URLSearchParams(location.search);catalogState.savedOnly=params.get("saved")==="1";
+    const bindings={"product-search":"search","brand-filter":"brand","stock-filter":"stock","sort-products":"sort"};
+    Object.entries(bindings).forEach(([id,key])=>document.getElementById(id)?.addEventListener(id==="product-search"?"input":"change",event=>{catalogState[key]=event.target.value;renderCatalogProducts()}));
+    document.getElementById("reset-filters")?.addEventListener("click",()=>{Object.assign(catalogState,{search:"",brand:"",stock:"",sort:"newest",savedOnly:false});["product-search","brand-filter","stock-filter"].forEach(id=>document.getElementById(id).value="");document.getElementById("sort-products").value="newest";renderCatalogProducts()});
+    document.getElementById("saved-only")?.addEventListener("click",()=>{catalogState.savedOnly=!catalogState.savedOnly;renderCatalogProducts()});
+    document.querySelectorAll("[data-view]").forEach(button=>button.addEventListener("click",()=>{catalogState.view=button.dataset.view;localStorage.setItem("hcs-catalog-view",catalogState.view);renderCatalogProducts()}));
+    document.getElementById("open-filters")?.addEventListener("click",()=>document.getElementById("filter-panel").classList.add("open"));
+    document.getElementById("close-filters")?.addEventListener("click",()=>document.getElementById("filter-panel").classList.remove("open"));
+  }
+
+  function renderCatalog(){
+    const brand=document.getElementById("brand-filter");
+    if(brand){const current=brand.value;const brands=[...new Set((DATA.products||[]).map(p=>String(p.Brand||"HCS").trim()).filter(Boolean))].sort();brand.innerHTML='<option value="">All brands</option>'+brands.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");brand.value=current}
+    renderCatalogProducts();
+  }
+
+  function renderCatalogProducts(){
+    const grid=document.getElementById("products-grid");if(!grid)return;
+    let rows=[...(DATA.products||[])];const q=catalogState.search.trim().toLowerCase();
+    if(q)rows=rows.filter(p=>[productName(p),p.ID,p.Category,p.Brand,p.ProductDetails,p.Specifications].join(" ").toLowerCase().includes(q));
+    if(catalogState.brand)rows=rows.filter(p=>String(p.Brand||"HCS")===catalogState.brand);
+    if(catalogState.stock)rows=rows.filter(p=>catalogState.stock==="in"?isInStock(p):!isInStock(p));
+    if(catalogState.savedOnly)rows=rows.filter(p=>favourites.has(String(p.ID)));
+    rows.sort((a,b)=>catalogState.sort==="price-low"?Number(a.Price||0)-Number(b.Price||0):catalogState.sort==="price-high"?Number(b.Price||0)-Number(a.Price||0):catalogState.sort==="alpha"?productName(a).localeCompare(productName(b)):new Date(b.CreatedAt||0)-new Date(a.CreatedAt||0));
+    grid.className=`product-grid ${catalogState.view==="list"?"list-view":""}`;grid.innerHTML=rows.map(productCard).join("")||empty(catalogState.savedOnly?"You have not saved any matching products.":"No matching products found.","bi-bag");
+    document.getElementById("product-count").textContent=`${rows.length} product${rows.length===1?"":"s"}`;
+    const saved=document.getElementById("saved-only");if(saved)saved.setAttribute("aria-pressed",String(catalogState.savedOnly));
+    document.querySelectorAll("[data-view]").forEach(button=>button.classList.toggle("active",button.dataset.view===catalogState.view));
+    renderActiveFilters();updateSavedCount();
+  }
+
+  function renderActiveFilters(){
+    const root=document.getElementById("active-filters");if(!root)return;const labels=[];
+    if(catalogState.search)labels.push(`Search: ${catalogState.search}`);if(catalogState.brand)labels.push(`Brand: ${catalogState.brand}`);if(catalogState.stock)labels.push(catalogState.stock==="in"?"In stock":"Out of stock");if(catalogState.savedOnly)labels.push("Saved only");
+    root.innerHTML=labels.map(label=>`<span class="filter-chip"><i class="bi bi-funnel"></i>${esc(label)}</span>`).join("");
+  }
+
+  function updateSavedCount(){document.querySelectorAll("[data-saved-count],#saved-counter").forEach(el=>el.textContent=favourites.size)}
+
+  function toggleFavourite(id){
+    const key=String(id);favourites.has(key)?favourites.delete(key):favourites.add(key);localStorage.setItem("hcs-favourites",JSON.stringify([...favourites]));updateSavedCount();renderPage();
+  }
+
+  async function shareProduct(id){
+    const p=(DATA.products||[]).find(x=>String(x.ID)===String(id));if(!p)return;const share={title:productName(p),text:`${productName(p)} - Rs ${money(p.Price)} | Product code: ${p.ID}`,url:`${location.origin}${location.pathname}?product=${encodeURIComponent(p.ID)}`};
+    try{if(navigator.share)await navigator.share(share);else{await navigator.clipboard.writeText(`${share.text}\n${share.url}`);toast("Product link copied.")}}catch(error){if(error.name!=="AbortError")toast("Sharing is not available on this device.")}
+  }
+
+  function openProduct(id){
+    const p=(DATA.products||[]).find(x=>String(x.ID)===String(id));if(!p)return;const title=productName(p),details=String(p.ProductDetails||p.Specifications||p.Description||"Details will be added soon.").split(/\n|•/).map(x=>x.trim()).filter(Boolean);
+    const modal=document.getElementById("product-modal");const body=modal.querySelector(".product-detail");const src=localImage(p,"products");
+    body.innerHTML=`<div class="product-detail-image"><img src="${esc(src)}" data-fallback="${esc(remoteImage(p.ImageURL))}" alt="${esc(title)}" data-lightbox-src="${esc(src)}" data-lightbox-title="${esc(title)}"></div><div class="product-detail-copy"><span class="category">${esc(p.Category||"HCS Product")}</span><h2>${esc(title)}</h2><div class="product-code">Product Code: ${esc(p.ID)}</div><span class="price">Rs ${money(p.Price)}</span><p><b>Brand:</b> ${esc(p.Brand||"HCS")} &nbsp; · &nbsp; <b class="${isInStock(p)?"status":"stock out"}">${isInStock(p)?"In Stock":"Out of Stock"}</b></p><h3>Complete Specifications</h3><ul class="spec-list">${details.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><a class="button primary" href="${waUrl(p.WhatsAppText||`Mujhe ${title} (${p.ID}) order karna hai.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order on WhatsApp</a></div>`;
+    openModal(modal);
+  }
+
+  function createModals(){
+    document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer"><div class="modal-backdrop" data-close-modal></div><div class="lightbox-dialog"><div class="lightbox-top"><span class="lightbox-title"></span><button type="button" data-close-modal aria-label="Close image"><i class="bi bi-x-lg"></i></button></div><div class="lightbox-stage"><img alt="Full image"></div><div class="lightbox-controls"><button type="button" data-zoom-out aria-label="Zoom out"><i class="bi bi-dash-lg"></i></button><span class="zoom-level">100%</span><button type="button" data-zoom-in aria-label="Zoom in"><i class="bi bi-plus-lg"></i></button><button type="button" data-zoom-reset aria-label="Fit to screen"><i class="bi bi-arrows-angle-contract"></i></button></div></div></div><div class="modal" id="product-modal" role="dialog" aria-modal="true" aria-label="Product details"><div class="modal-backdrop" data-close-modal></div><div class="product-modal-card"><button class="icon-button product-modal-close" type="button" data-close-modal aria-label="Close product details"><i class="bi bi-x-lg"></i></button><div class="product-detail"></div></div></div><div id="toast" class="toast" role="status"></div>`);
+    setupLightbox();
+  }
+
+  function openModal(modal){document.querySelectorAll(".modal.open").forEach(closeModal);modal.classList.add("open");document.body.classList.add("modal-open")}
+  function closeModal(modal){modal.classList.remove("open");if(!document.querySelector(".modal.open"))document.body.classList.remove("modal-open")}
+
+  function setupLightbox(){
+    const modal=document.getElementById("lightbox"),img=modal.querySelector("img"),stage=modal.querySelector(".lightbox-stage"),level=modal.querySelector(".zoom-level");
+    let scale=1,x=0,y=0,drag=null,pinch=null;const pointers=new Map();
+    const clamp=v=>Math.max(1,Math.min(5,v));
+    const draw=()=>{if(scale===1){x=0;y=0}img.style.transform=`translate(${x}px,${y}px) scale(${scale})`;level.textContent=`${Math.round(scale*100)}%`};
+    const setScale=value=>{scale=clamp(value);draw()};
+    window.openHcsLightbox=(src,title)=>{img.src=src;img.alt=title||"Full image";modal.querySelector(".lightbox-title").textContent=title||"Image";scale=1;x=0;y=0;draw();openModal(modal)};
+    modal.querySelector("[data-zoom-in]").addEventListener("click",()=>setScale(scale+.25));modal.querySelector("[data-zoom-out]").addEventListener("click",()=>setScale(scale-.25));modal.querySelector("[data-zoom-reset]").addEventListener("click",()=>setScale(1));
+    stage.addEventListener("wheel",event=>{event.preventDefault();setScale(scale+(event.deltaY<0?.2:-.2))},{passive:false});stage.addEventListener("dblclick",()=>setScale(scale===1?2.25:1));
+    stage.addEventListener("pointerdown",event=>{stage.setPointerCapture(event.pointerId);pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});if(pointers.size===1)drag={startX:event.clientX,startY:event.clientY,x,y};if(pointers.size===2){const [a,b]=[...pointers.values()];pinch={distance:Math.hypot(a.x-b.x,a.y-b.y),scale};drag=null}});
+    stage.addEventListener("pointermove",event=>{if(!pointers.has(event.pointerId))return;pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});if(pointers.size===2&&pinch){const [a,b]=[...pointers.values()];setScale(pinch.scale*Math.hypot(a.x-b.x,a.y-b.y)/pinch.distance)}else if(pointers.size===1&&drag&&scale>1){x=drag.x+event.clientX-drag.startX;y=drag.y+event.clientY-drag.startY;draw()}});
+    const release=event=>{pointers.delete(event.pointerId);pinch=null;drag=null};stage.addEventListener("pointerup",release);stage.addEventListener("pointercancel",release);
+  }
+
+  function toast(message){const box=document.getElementById("toast");box.textContent=message;box.classList.add("show");setTimeout(()=>box.classList.remove("show"),2300)}
+
+  document.addEventListener("click",event=>{
+    const emptySocial=event.target.closest("[data-empty-social]");if(emptySocial){event.preventDefault();toast("This social media link will be added soon.");return}
+    const lightbox=event.target.closest("[data-lightbox-src]");if(lightbox){event.preventDefault();const img=lightbox.matches("img")?lightbox:lightbox.querySelector("img");window.openHcsLightbox(img?.currentSrc||lightbox.dataset.lightboxSrc,lightbox.dataset.lightboxTitle||img?.alt);return}
+    const favourite=event.target.closest("[data-favourite]");if(favourite){toggleFavourite(favourite.dataset.favourite);return}
+    const detail=event.target.closest("[data-details]");if(detail){openProduct(detail.dataset.details);return}
+    const share=event.target.closest("[data-share-product]");if(share){shareProduct(share.dataset.shareProduct);return}
+    const close=event.target.closest("[data-close-modal]");if(close)closeModal(close.closest(".modal"));
+  });
+  document.addEventListener("error",event=>{const img=event.target;if(img.tagName!=="IMG")return;const fallback=img.dataset.fallback;if(fallback&&!img.dataset.triedFallback){img.dataset.triedFallback="1";img.src=fallback}else{img.style.opacity="0"}},true);
+  document.addEventListener("keydown",event=>{if(event.key==="Escape")document.querySelectorAll(".modal.open").forEach(closeModal)});
+
+  renderLayout();createModals();setupCatalog();updateSavedCount();loadData();
+})();
+
+</script>
 </head>
 <body data-page="jobs">
   <div id="site-header"></div>
