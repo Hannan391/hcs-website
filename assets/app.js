@@ -130,25 +130,26 @@ const CFG = {
     });
   }
 
-  function remoteImage(url){
+  function remoteImage(url,size=640){
     const text=String(url||"").trim();
     const match=text.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/)||text.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    return match?`https://drive.google.com/thumbnail?id=${match[1]}&sz=w1600`:text;
+    return match?`https://drive.google.com/thumbnail?id=${match[1]}&sz=w${size}`:text;
   }
 
-  function localImage(item,group,field="ImageURL"){
-    if(CFG.SELF_CONTAINED)return remoteImage(item[field]);
-    const id=cleanId(item.ID);if(!id)return remoteImage(item[field]);
+  function localImage(item,group,field="ImageURL",size=640){
+    if(CFG.SELF_CONTAINED)return remoteImage(item[field],size);
+    const id=cleanId(item.ID);if(!id)return remoteImage(item[field],size);
     if(group==="services")return `assets/services/${id}-ImageURL.jpg`;
     if(group==="products")return `assets/products/${id}-ImageURL.jpg`;
     if(group==="jobs"&&field==="BannerURL")return `assets/jobs/${id}-BannerURL.jpg`;
-    return remoteImage(item[field]);
+    return remoteImage(item[field],size);
   }
 
   function imageButton(item,group,title,field="ImageURL",className="image-button"){
-    const local=localImage(item,group,field),fallback=remoteImage(item[field]);
-    if(!local)return `<div class="${className} placeholder-image"><span>HCS</span></div>`;
-    return `<button class="${className}" type="button" data-lightbox-src="${esc(local)}" data-lightbox-title="${esc(title)}" aria-label="Open complete image of ${esc(title)}"><img src="${esc(local)}" data-fallback="${esc(fallback)}" alt="${esc(title)}" loading="lazy" decoding="async" fetchpriority="low"><span class="image-hint"><i class="bi bi-arrows-fullscreen"></i> View & zoom</span></button>`;
+    const thumbnailSize=group==="jobs"?640:480;
+    const thumbnail=localImage(item,group,field,thumbnailSize),fallback=remoteImage(item[field],thumbnailSize),fullImage=remoteImage(item[field],1600);
+    if(!thumbnail)return `<div class="${className} placeholder-image"><span>HCS</span></div>`;
+    return `<button class="${className}" type="button" data-lightbox-src="${esc(fullImage||thumbnail)}" data-lightbox-title="${esc(title)}" aria-label="Open complete image of ${esc(title)}"><img src="${esc(thumbnail)}" data-fallback="${esc(fallback)}" alt="${esc(title)}" loading="lazy" decoding="async" fetchpriority="low" width="640" height="420"><span class="image-hint"><i class="bi bi-arrows-fullscreen"></i> View & zoom</span></button>`;
   }
 
   function serviceCard(item){
@@ -325,8 +326,8 @@ const CFG = {
 
   function openProduct(id){
     const p=(DATA.products||[]).find(x=>String(x.ID)===String(id));if(!p)return;const title=productName(p),details=String(p.ProductDetails||p.Specifications||p.Description||"Details will be added soon.").split(/\n|•/).map(x=>x.trim()).filter(Boolean);
-    const modal=document.getElementById("product-modal");const body=modal.querySelector(".product-detail");const src=localImage(p,"products");
-    body.innerHTML=`<div class="product-detail-image"><img src="${esc(src)}" data-fallback="${esc(remoteImage(p.ImageURL))}" alt="${esc(title)}" data-lightbox-src="${esc(src)}" data-lightbox-title="${esc(title)}"></div><div class="product-detail-copy"><span class="category">${esc(p.Category||"HCS Product")}</span><h2>${esc(title)}</h2><div class="product-code">Product Code: ${esc(p.ID)}</div><span class="price">Rs ${money(p.Price)}</span><p><b>Brand:</b> ${esc(p.Brand||"HCS")} &nbsp; · &nbsp; <b class="${isInStock(p)?"status":"stock out"}">${isInStock(p)?"In Stock":"Out of Stock"}</b></p><h3>Complete Specifications</h3><ul class="spec-list">${details.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><a class="button primary" href="${waUrl(p.WhatsAppText||`Mujhe ${title} (${p.ID}) order karna hai.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order on WhatsApp</a></div>`;
+    const modal=document.getElementById("product-modal");const body=modal.querySelector(".product-detail");const src=localImage(p,"products","ImageURL",900),fullImage=remoteImage(p.ImageURL,1600);
+    body.innerHTML=`<div class="product-detail-image"><img src="${esc(src)}" data-fallback="${esc(remoteImage(p.ImageURL,900))}" alt="${esc(title)}" loading="lazy" decoding="async" width="900" height="900" data-lightbox-src="${esc(fullImage||src)}" data-lightbox-title="${esc(title)}"></div><div class="product-detail-copy"><span class="category">${esc(p.Category||"HCS Product")}</span><h2>${esc(title)}</h2><div class="product-code">Product Code: ${esc(p.ID)}</div><span class="price">Rs ${money(p.Price)}</span><p><b>Brand:</b> ${esc(p.Brand||"HCS")} &nbsp; · &nbsp; <b class="${isInStock(p)?"status":"stock out"}">${isInStock(p)?"In Stock":"Out of Stock"}</b></p><h3>Complete Specifications</h3><ul class="spec-list">${details.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><a class="button primary" href="${waUrl(p.WhatsAppText||`Mujhe ${title} (${p.ID}) order karna hai.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order on WhatsApp</a></div>`;
     openModal(modal);
   }
 
