@@ -1,1 +1,0 @@
-// Future Google Script integration
