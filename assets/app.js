@@ -4,11 +4,11 @@ const CFG = {
   CONTACT_EMAIL: "alhannancomputers@gmail.com",
   WHATSAPP_NUMBER: "923346395391",
   SOCIAL_LINKS: {
-    youtube: "",
-    facebook: "",
-    instagram: "",
-    whatsapp: "https://wa.me/923346395391",
-    tiktok: ""
+    youtube: "https://www.youtube.com/@hannancs021",
+    facebook: "https://web.facebook.com/hannancs",
+    instagram: "https://www.instagram.com/hannancomputers",
+    whatsapp: "https://whatsapp.com/channel/0029VaFbzpy2UPBMgZqZUQ1L",
+    tiktok: "https://www.tiktok.com/@hannan_computers"
   }
 };
 
