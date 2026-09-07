@@ -215,13 +215,15 @@ const CFG = {
         if(response.ok){DATA=await response.json();renderPage();applySettings()}
       }catch(error){renderPage()}
     }
+    const cached=window.HCSDataCache?.read();
+    if(cached){DATA=cached;renderPage();applySettings()}
     if(CFG.BACKEND_URL&&CFG.BACKEND_URL.startsWith("http"))loadRemoteData();
   }
 
   function loadRemoteData(){
     const script=document.createElement("script");
     const cleanup=()=>script.remove();
-    window.hcsDataCallback=data=>{if(data&&!data.error){DATA=data;renderPage();applySettings()}cleanup()};
+    window.hcsDataCallback=data=>{if(data&&!data.error){window.HCSDataCache?.write(data);DATA=data;renderPage();applySettings()}cleanup()};
     script.src=`${CFG.BACKEND_URL}${CFG.BACKEND_URL.includes("?")?"&":"?"}api=public&callback=hcsDataCallback&_=${Date.now()}`;
     script.onerror=cleanup;document.body.appendChild(script);setTimeout(cleanup,9000);
   }
