@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="assets/styles.css">
   <script src="assets/data.js" defer></script>
   <script src="assets/data-cache.js" defer></script>
+  <script src="assets/job-search.js" defer></script>
   <script src="assets/app.js" defer></script>
 </head>
 <body data-page="jobs">
@@ -16,7 +17,11 @@
   <main>
     <section class="page-hero"><div class="shell"><span class="eyebrow">JOB INFORMATION</span><h1>Latest opportunities in one clear place.</h1><p>Check qualifications, closing dates, official links and full advertisements before applying.</p></div></section>
     <section class="section shell">
-      <div class="toolbar simple-toolbar"><label class="search-field"><i class="bi bi-search"></i><input id="job-search" type="search" placeholder="Search jobs, department or location..." aria-label="Search jobs"></label><span id="job-count" class="result-count"></span></div>
+      <div class="job-search-panel">
+        <label class="search-field job-search-main"><i class="bi bi-search"></i><input id="job-search" type="search" placeholder="Search title, qualification, age or location..." aria-label="Search jobs" autocomplete="off"><button id="clear-job-search" class="search-clear" type="button" aria-label="Clear job search"><i class="bi bi-x-lg"></i></button></label>
+        <div class="job-filter-row"><select id="job-department-filter" class="select-field" aria-label="Filter by department"><option value="">All Departments</option></select><select id="job-category-filter" class="select-field" aria-label="Filter by category"><option value="">All Categories</option></select><select id="job-location-filter" class="select-field" aria-label="Filter by location"><option value="">All Locations</option></select></div>
+        <span id="job-count" class="result-count"></span>
+      </div>
       <div id="jobs-list" class="jobs-list loading-grid" aria-live="polite"></div>
     </section>
   </main>
