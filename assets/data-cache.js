@@ -1,10 +1,10 @@
 (function(window,storage){
   "use strict";
 
-  const KEY="hcs-public-data-v1";
+  const KEY="hcs-public-data-v2";
 
   function valid(data){
-    return data&&typeof data==="object"&&Array.isArray(data.jobs)&&Array.isArray(data.downloads);
+    return data&&typeof data==="object"&&!Array.isArray(data)&&data.settings&&typeof data.settings==="object"&&!Array.isArray(data.settings)&&["services","jobs","downloads","products","schemes","education"].every(key=>Array.isArray(data[key]));
   }
 
   window.HCSDataCache={

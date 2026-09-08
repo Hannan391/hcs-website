@@ -16,7 +16,7 @@ const CFG = {
   "use strict";
 
   const PAGE=document.body.dataset.page||"home";
-  let DATA={settings:{},services:[],jobs:[],downloads:[],products:[]};
+  let DATA={settings:{},services:[],jobs:[],downloads:[],products:[],schemes:[],education:[]};
   let favourites=new Set(JSON.parse(localStorage.getItem("hcs-favourites")||"[]"));
   const catalogState={search:"",brand:"",stock:"",sort:"newest",view:localStorage.getItem("hcs-catalog-view")||"grid",savedOnly:false};
   const jobSearchState={query:"",department:"",category:"",location:""};
@@ -26,7 +26,7 @@ const CFG = {
   const productName=p=>p.ItemName||p.Title||"HCS Product";
   const money=value=>Number(value||0).toLocaleString("en-PK");
   const postTime=item=>{
-    const value=item.CreatedAt||item.AdDate||item.UploadedAt||item.Date||item.LastDate||0;
+    const value=item.CreatedAt||item.AdDate||item.UploadedAt||item.Date||item.LastDate||item.PublishDate||0;
     const time=new Date(value).getTime();
     return Number.isFinite(time)?time:0;
   };
@@ -55,10 +55,10 @@ const CFG = {
       <header class="site-header">
         <div class="shell nav-wrap">
           <a class="brand" href="index.html" aria-label="HCS home"><span class="brand-mark">HCS</span><span class="brand-copy"><b>Hannan Computers</b><small>& Printers</small></span></a>
-          <nav class="desktop-nav" aria-label="Main navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
+          <nav class="desktop-nav" aria-label="Main navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("govt-schemes.html","Govt Schemes","schemes")}${navLink("education-updates.html","Education Updates","education")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
           <div class="header-actions"><a class="saved-link" href="catalog.html?saved=1"><i class="bi bi-heart"></i> Saved <span data-saved-count>${favourites.size}</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><i class="bi bi-list"></i></button></div>
         </div>
-        <nav class="mobile-nav" aria-label="Mobile navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
+        <nav class="mobile-nav" aria-label="Mobile navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("govt-schemes.html","Govt Schemes","schemes")}${navLink("education-updates.html","Education Updates","education")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
       </header>`;
     if(footer)footer.innerHTML=`
       <footer class="site-footer">
@@ -217,13 +217,13 @@ const CFG = {
     if(window.HCS_INLINE_DATA){
       DATA=window.HCS_INLINE_DATA;renderPage();applySettings();
     }else{
+      const cached=window.HCSDataCache?.read();
+      if(cached){DATA=cached;renderPage();applySettings()}
       try{
         const response=await fetch("data/live-data.json",{cache:"no-store"});
         if(response.ok){DATA=await response.json();renderPage();applySettings()}
       }catch(error){renderPage()}
     }
-    const cached=window.HCSDataCache?.read();
-    if(cached){DATA=cached;renderPage();applySettings()}
     if(CFG.BACKEND_URL&&CFG.BACKEND_URL.startsWith("http"))loadRemoteData();
   }
 
@@ -246,6 +246,8 @@ const CFG = {
     if(PAGE==="home")renderHome();
     if(PAGE==="services")renderServices();
     if(PAGE==="jobs")renderJobs();
+    if(PAGE==="schemes")renderUpdates("schemes","schemes-content");
+    if(PAGE==="education")renderUpdates("education","education-content");
     if(PAGE==="downloads")renderDownloads();
     if(PAGE==="catalog")renderCatalog();
   }
@@ -281,6 +283,32 @@ const CFG = {
     const groups=[{title:"Software & Tools",rows:(DATA.downloads||[]).filter(x=>String(x.Category||"").toLowerCase()!=="customer data").sort(newestFirst)},{title:"Customer Data",rows:(DATA.downloads||[]).filter(x=>String(x.Category||"").toLowerCase()==="customer data").sort(newestFirst)}];
     root.innerHTML=groups.map(group=>`<section class="download-group"><h2>${group.title}</h2><div class="card-grid card-grid-3">${group.rows.map((item,index)=>{const description=item.Description||"";const descriptionId=`download-description-${cleanId(item.ID)||index}`;return `<article class="content-card">${item.ImageURL?imageButton(item,"downloads",item.Title||"Download"):""}<div class="card-body"><span class="category">${esc(item.Category||"Download")}</span><h3>${esc(item.Title||"Download")}</h3>${description?`<div class="download-description-wrap"><p class="download-description" id="${descriptionId}">${esc(description)}</p><button class="job-read-more" type="button" data-download-read-more aria-expanded="false" aria-controls="${descriptionId}">Read More <i class="bi bi-chevron-down" aria-hidden="true"></i></button></div>`:""}<div class="card-actions">${item.URL?`<a class="button primary small" href="${esc(item.URL)}" target="_blank" rel="noopener"><i class="bi bi-download"></i> Download</a>`:""}</div></div></article>`}).join("")||empty("No files added yet.","bi-cloud-arrow-down")}</div></section>`).join("");
     if(!root.dataset.readMoreBound){root.addEventListener("click",event=>{const button=event.target.closest("[data-download-read-more]");if(!button)return;const description=document.getElementById(button.getAttribute("aria-controls"));if(!description)return;const expanded=button.getAttribute("aria-expanded")==="true";button.setAttribute("aria-expanded",String(!expanded));description.classList.toggle("expanded",!expanded);button.innerHTML=`${expanded?"Read More":"Read Less"} <i class="bi ${expanded?"bi-chevron-down":"bi-chevron-up"}" aria-hidden="true"></i>`});root.dataset.readMoreBound="1"}
+  }
+
+  function updateCard(item,index){
+    const title=item.Title||"HCS Update",description=item.Description||"",date=item.PublishDate||item.CreatedAt||"";
+    const officialLink=safeHttpUrl(item.OfficialLink);
+    const descriptionId=`update-description-${cleanId(item.ID)||index}`;
+    return `<article class="content-card update-card">${imageButton(item,"updates",title)}<div class="card-body"><span class="category">${esc(item.Category||"Update")}</span><h3>${esc(title)}</h3>${date?`<time class="update-date" datetime="${esc(date)}"><i class="bi bi-calendar3" aria-hidden="true"></i>${esc(date)}</time>`:""}${description?`<div class="download-description-wrap"><p class="download-description" id="${descriptionId}">${esc(description)}</p><button class="job-read-more" type="button" data-update-read-more aria-expanded="false" aria-controls="${descriptionId}">Read More <i class="bi bi-chevron-down" aria-hidden="true"></i></button></div>`:""}<div class="card-actions">${officialLink?`<a class="button primary small update-link" href="${esc(officialLink)}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Official Link</a>`:""}</div></div></article>`;
+  }
+
+  function safeHttpUrl(value){
+    const text=String(value||"").trim();
+    if(!/^https?:\/\//i.test(text))return "";
+    try{const url=new URL(text);return url.protocol==="http:"||url.protocol==="https:"?url.href:""}catch(error){return ""}
+  }
+
+  function bindUpdateReadMore(root){
+    if(root.dataset.readMoreBound)return;
+    root.addEventListener("click",event=>{const button=event.target.closest("[data-update-read-more]");if(!button)return;const description=document.getElementById(button.getAttribute("aria-controls"));if(!description)return;const expanded=button.getAttribute("aria-expanded")==="true";button.setAttribute("aria-expanded",String(!expanded));description.classList.toggle("expanded",!expanded);button.innerHTML=`${expanded?"Read More":"Read Less"} <i class="bi ${expanded?"bi-chevron-down":"bi-chevron-up"}" aria-hidden="true"></i>`});
+    root.dataset.readMoreBound="1";
+  }
+
+  function renderUpdates(type,rootId){
+    const root=document.getElementById(rootId);if(!root)return;
+    const rows=[...(DATA[type]||[])].sort(newestFirst);
+    root.innerHTML=rows.map(updateCard).join("")||empty("No updates added yet.","bi-megaphone");
+    bindUpdateReadMore(root);
   }
 
   function empty(message,icon){return `<div class="empty-state"><i class="bi ${icon}"></i>${esc(message)}</div>`}
