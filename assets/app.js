@@ -304,7 +304,7 @@ const CFG = {
 
   function bannerSvgDataUrl(html,title){
     const body=xmlSafeBannerHtml_(html);
-    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="788" viewBox="0 0 1200 788"><title>${esc(title||"HCS Banner")}</title><foreignObject width="1200" height="788"><div xmlns="http://www.w3.org/1999/xhtml" style="box-sizing:border-box;width:1200px;height:788px;overflow:hidden;background:#edf3f9;color:#0b223d;font-family:Arial,sans-serif">${body}</div></foreignObject></svg>`;
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1576" viewBox="0 0 1200 788"><title>${esc(title||"HCS Banner")}</title><foreignObject width="1200" height="788"><div xmlns="http://www.w3.org/1999/xhtml" style="box-sizing:border-box;width:1200px;height:788px;overflow:hidden;background:#edf3f9;color:#0b223d;font-family:Arial,sans-serif">${body}</div></foreignObject></svg>`;
     return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
   }
 
@@ -312,7 +312,7 @@ const CFG = {
     if(!image||image.dataset.hdBanner==="fallback")return;
     image.dataset.hdBanner="fallback";
     const title=esc(image.alt||"HCS Banner");
-    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="788" viewBox="0 0 1200 788"><rect width="1200" height="788" fill="#edf3f9"/><text x="600" y="370" text-anchor="middle" fill="#0b223d" font-family="Arial,sans-serif" font-size="58" font-weight="700">HCS</text><text x="600" y="440" text-anchor="middle" fill="#58708c" font-family="Arial,sans-serif" font-size="30">${title}</text></svg>`;
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1576" viewBox="0 0 1200 788"><rect width="1200" height="788" fill="#edf3f9"/><text x="600" y="370" text-anchor="middle" fill="#0b223d" font-family="Arial,sans-serif" font-size="58" font-weight="700">HCS</text><text x="600" y="440" text-anchor="middle" fill="#58708c" font-family="Arial,sans-serif" font-size="30">${title}</text></svg>`;
     image.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
   }
 

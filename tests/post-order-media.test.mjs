@@ -109,12 +109,12 @@ test("HTML media renders as a right-click-saveable HD image, while uploaded and 
   assert.doesNotMatch(root.innerHTML,/ignored/);
 });
 
-test("HTML banner image source contains the sanitized 1200 by 788 vector and a 2x PNG upgrade path",async()=>{
+test("HTML banner image source has a true 2400 by 1576 raster surface and a 1200 by 788 layout",async()=>{
   const root=fakeElement();
   const {window}=await render("jobs",{jobs:[dated("HD Job","2026-08-01",{BannerHTML:'<section style="background:#fff"><h2>HD Banner</h2><script>alert(1)</script></section>'})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
   const encoded=root.innerHTML.match(/src="data:image\/svg\+xml;charset=utf-8,([^"]+)"/)?.[1]||"";
   const svg=decodeURIComponent(encoded.replaceAll("&amp;","&"));
-  assert.match(svg,/<svg[^>]+width="1200"[^>]+height="788"[^>]+viewBox="0 0 1200 788"/);
+  assert.match(svg,/<svg[^>]+width="2400"[^>]+height="1576"[^>]+viewBox="0 0 1200 788"/);
   assert.match(svg,/HD Banner/);
   assert.doesNotMatch(svg,/<script/i);
   assert.equal(typeof window.upgradeHtmlBannerImages,"function");
