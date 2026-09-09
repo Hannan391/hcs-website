@@ -301,7 +301,8 @@ window.HCS_INLINE_DATA={
       "OfficialAdURL": "https://drive.google.com/file/d/1iXw3wdzslUz9GKMpwP3gOXObeRhl_SKQ/view",
       "Category": "Government Jobs",
       "CreatedAt": "2026-08-29",
-      "ComputedStatus": "Closing Soon"
+      "ComputedStatus": "Closing Soon",
+      "PublicHiddenFrom": 1789066800000
     }
   ],
   "downloads": [],

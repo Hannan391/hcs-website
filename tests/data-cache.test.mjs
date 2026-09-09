@@ -18,7 +18,7 @@ test("saved public data is available immediately on the next page load",async()=
   vm.createContext(context);
   vm.runInContext(source,context);
 
-  const fresh={settings:{site:"HCS"},services:[],jobs:[{ID:"J2"}],downloads:[{ID:"D2"}],products:[],schemes:[],education:[]};
+  const fresh={settings:{site:"HCS"},services:[],jobs:[{ID:"J2",PublicHiddenFrom:0}],downloads:[{ID:"D2"}],products:[],schemes:[],education:[]};
   context.window.HCSDataCache.write(fresh);
 
   assert.deepEqual(JSON.parse(JSON.stringify(context.window.HCSDataCache.read())),fresh);
@@ -45,7 +45,7 @@ test("cache stores schemes and education and rejects incomplete collections",asy
   const payload={settings:{},services:[],jobs:[],downloads:[],products:[],schemes:[{ID:"S1"}],education:[{ID:"E1"}]};
 
   assert.equal(cache.write(payload),true);
-  assert.notEqual(localStorage.getItem("hcs-public-data-v2"),null);
+  assert.notEqual(localStorage.getItem("hcs-public-data-v4"),null);
   assert.deepEqual(JSON.parse(JSON.stringify(cache.read().schemes)),[{ID:"S1"}]);
   assert.deepEqual(JSON.parse(JSON.stringify(cache.read().education)),[{ID:"E1"}]);
 
@@ -56,4 +56,6 @@ test("cache stores schemes and education and rejects incomplete collections",asy
   }
 
   assert.equal(cache.write({...payload,settings:[]}),false);
+  assert.equal(cache.write({...payload,jobs:[{ID:"dated",LastDate:"2026-10-01"}]}),false);
+  assert.equal(cache.write({...payload,jobs:[{ID:"bad-epoch",PublicHiddenFrom:Infinity}]}),false);
 });

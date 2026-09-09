@@ -189,6 +189,19 @@ test("cached public data renders before the live-data request settles",async()=>
   assert.match(root.innerHTML,/Cached scheme/);
 });
 
+test("update HTML media is sandboxed and prefers an image when both values exist",async()=>{
+  const root=fakeElement();
+  await renderApp("education",{education:[
+    {ID:"html",Title:"HTML update",ImageHTML:"<div>Safe visual</div>"},
+    {ID:"dual",Title:"Dual update",ImageURL:"https://example.com/image.jpg",ImageHTML:"<div>Ignored visual</div>"}
+  ]},{"education-content":root});
+
+  assert.equal((root.innerHTML.match(/<iframe\b/g)||[]).length,1);
+  assert.match(root.innerHTML,/sandbox="allow-popups"/);
+  assert.equal((root.innerHTML.match(/<img\b/g)||[]).length,1);
+  assert.doesNotMatch(root.innerHTML,/Ignored visual/);
+});
+
 test("update cards suppress non-HTTP official links",async()=>{
   const root=fakeElement();
   await renderApp("education",{

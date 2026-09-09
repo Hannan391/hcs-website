@@ -28,9 +28,11 @@ const CFG = {
   const postTime=item=>{
     const value=item.CreatedAt||item.AdDate||item.UploadedAt||item.Date||item.LastDate||item.PublishDate||0;
     const time=new Date(value).getTime();
-    return Number.isFinite(time)?time:0;
+    return Number.isFinite(time)&&time?time:idTimestamp(item.ID);
   };
+  const idTimestamp=id=>{const text=String(id||""),epoch=text.match(/(?:^|\D)(1\d{12})(?:\D|$)/);if(epoch){const value=Number(epoch[1]);if(value>=946684800000&&value<=4102444800000)return value}const match=text.match(/(?:^|\D)((?:19|20)\d{6})(\d{6})?(?:\D|$)/);if(!match)return 0;const date=match[1],time=match[2]||"000000",hour=Number(time.slice(0,2)),minute=Number(time.slice(2,4)),second=Number(time.slice(4,6));if(hour>23||minute>59||second>59)return 0;const value=Date.UTC(Number(date.slice(0,4)),Number(date.slice(4,6))-1,Number(date.slice(6,8)),hour,minute,second),parsed=new Date(value);return parsed.getUTCFullYear()===Number(date.slice(0,4))&&parsed.getUTCMonth()===Number(date.slice(4,6))-1&&parsed.getUTCDate()===Number(date.slice(6,8))?value:0};
   const newestFirst=(a,b)=>postTime(b)-postTime(a);
+  const currentData=data=>{const copy={...(data||{})};copy.jobs=[...(copy.jobs||[])].filter(job=>{const hasEpoch=Object.prototype.hasOwnProperty.call(job,"PublicHiddenFrom"),epoch=Number(job.PublicHiddenFrom);if(!hasEpoch||!Number.isFinite(epoch)||epoch<0)return !(job.LastDate||job.ExtendedDate);return epoch===0||Date.now()<epoch});return copy};
   const highlight=(value,query)=>{
     const tokens=String(query||"").trim().split(/\s+/).filter(Boolean).map(token=>token.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"));
     if(!tokens.length)return esc(value);
@@ -159,9 +161,137 @@ const CFG = {
     return `<button class="${className}" type="button" data-lightbox-src="${esc(fullImage||thumbnail)}" data-lightbox-title="${esc(title)}" aria-label="Open complete image of ${esc(title)}"><img src="${esc(thumbnail)}" data-fallback="${esc(fallback)}" alt="${esc(title)}" loading="lazy" decoding="async" fetchpriority="low" width="640" height="420"><span class="image-hint"><i class="bi bi-arrows-fullscreen"></i> View & zoom</span></button>`;
   }
 
+  const SAFE_BANNER_TAGS=["div","section","span","p","h1","h2","h3","strong","em","a","button","ul","ol","li","br"];
+  const BLOCKED_BANNER_CONTAINERS=["script","style","iframe","form","object","svg","math","template","picture","video","audio","canvas","noscript","xmp","plaintext","textarea","title"];
+  const BLOCKED_BANNER_VOID_TAGS=["base","embed","img","link","meta","source"];
+  const SAFE_BANNER_CSS=["color","background","background-color","padding","margin","border","border-radius","text-align","font-size","font-weight","line-height","width","max-width","height","min-height","display","gap","justify-content","align-items"];
+  const SAFE_BANNER_CSS_FUNCTIONS=["rgb","rgba","hsl","hsla","linear-gradient","radial-gradient","repeating-linear-gradient","repeating-radial-gradient","calc","min","max","clamp"];
+
+  function decodeBannerEntities(value){
+    return String(value||"").replace(/&#(?:x([0-9a-f]+)|(\d+));?/gi,(match,hex,decimal)=>{
+      const code=parseInt(hex||decimal,hex?16:10);
+      return isNaN(code)||code<1||code>1114111?"":String.fromCodePoint(code);
+    }).replace(/&(amp|quot|apos|lt|gt|colon|tab|newline);/gi,(match,name)=>({amp:"&",quot:'"',apos:"'",lt:"<",gt:">",colon:":",tab:"\t",newline:"\n"})[name.toLowerCase()]);
+  }
+
+  function safeBannerUrl(value){
+    const text=decodeBannerEntities(value).trim();
+    if(!text)return "";
+    if(text.length>1000)return "";
+    return /^https?:\/\/[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?(?::\d{1,5})?(?:[/?#]|$)/i.test(text)&&!/[\s\\]/.test(text)?text:"";
+  }
+
+  function sanitizeBannerClass_(value){
+    return String(value||"").split(/\s+/).filter(token=>/^[a-z0-9_-]{1,80}$/i.test(token)).slice(0,20).join(" ");
+  }
+
+  function safeBannerCssValue_(value){
+    if(!value||value.length>300||/url|expression|javascript|@import|[\\\u0000-\u001f\u007f]|\/\*|\*\//i.test(value))return false;
+    const functions=String(value).match(/[a-z_-][a-z0-9_-]*\s*\(/gi)||[];
+    return functions.every(name=>SAFE_BANNER_CSS_FUNCTIONS.indexOf(name.replace(/\s*\($/,"").toLowerCase())>=0);
+  }
+
+  function sanitizeBannerStyle_(value){
+    const declarations=[];
+    String(value||"").split(";").forEach(declaration=>{
+      const colon=declaration.indexOf(":");
+      if(colon<1)return;
+      const property=declaration.slice(0,colon).trim().toLowerCase(),cssValue=decodeBannerEntities(declaration.slice(colon+1)).trim();
+      if(SAFE_BANNER_CSS.indexOf(property)<0||!safeBannerCssValue_(cssValue))return;
+      declarations.push(property+": "+cssValue);
+    });
+    return declarations.join("; ");
+  }
+
+  function bannerTagEnd_(source,start){
+    let quote="";
+    for(let index=start;index<source.length;index++){
+      const character=source.charAt(index);
+      if(quote){if(character===quote)quote="";continue}
+      if(character==='"'||character==="'"){quote=character;continue}
+      if(character===">")return index;
+    }
+    return -1;
+  }
+
+  function removeBlockedBannerElements_(value){
+    const containers=BLOCKED_BANNER_CONTAINERS.join("|");
+    const paired=new RegExp("<\\s*("+containers+")\\b[^>]*>[\\s\\S]*?(?:<\\s*\\/\\s*\\1\\s*>|$)","gi");
+    let previous;
+    do{previous=value;value=value.replace(paired,"")}while(value!==previous);
+    const blocked=containers+"|"+BLOCKED_BANNER_VOID_TAGS.join("|");
+    return value.replace(new RegExp("<\\s*\\/?\\s*(?:"+blocked+")\\b[^>]*>","gi"),"");
+  }
+
+  function bannerAttributes_(source){
+    const attributes={},pattern=/([^\s=\/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+    let match;
+    while((match=pattern.exec(source))){
+      const name=String(match[1]||"").toLowerCase();
+      if(["class","style","href","target","rel"].indexOf(name)<0||attributes[name]!==undefined)continue;
+      attributes[name]=decodeBannerEntities(match[2]!==undefined?match[2]:match[3]!==undefined?match[3]:match[4]!==undefined?match[4]:"");
+    }
+    return attributes;
+  }
+
+  function sanitizeBannerTag_(source){
+    const closing=source.match(/^\s*\/\s*([a-z][a-z0-9]*)\s*$/i);
+    if(closing){const tag=closing[1].toLowerCase();return SAFE_BANNER_TAGS.indexOf(tag)>=0&&tag!=="br"?"</"+tag+">":""}
+    const opening=source.match(/^\s*([a-z][a-z0-9]*)([\s\S]*?)\/?\s*$/i);
+    if(!opening)return "";
+    const tag=opening[1].toLowerCase();
+    if(SAFE_BANNER_TAGS.indexOf(tag)<0)return "";
+    const attributes=bannerAttributes_(opening[2]),rendered=[];
+    if(attributes["class"]){
+      const className=sanitizeBannerClass_(attributes["class"]);
+      if(className)rendered.push('class="'+esc(className)+'"');
+    }
+    if(attributes.style){
+      const style=sanitizeBannerStyle_(attributes.style);
+      if(style)rendered.push('style="'+esc(style)+'"');
+    }
+    if(tag==="a"){
+      const href=safeBannerUrl(attributes.href||"");
+      if(href)rendered.push('href="'+esc(href)+'"');
+      rendered.push('target="_blank"','rel="noopener noreferrer"');
+    }
+    return "<"+tag+(rendered.length?" "+rendered.join(" "):"")+">";
+  }
+
+  function sanitizeBannerHtml(html){
+    const original=String(html||"").trim();
+    if(!original)return "";
+    let source=original.slice(0,12000).replace(/<!--[\s\S]*?(?:-->|$)/g,"");
+    source=removeBlockedBannerElements_(source);
+    let output="",index=0;
+    while(index<source.length){
+      const open=source.indexOf("<",index);
+      if(open<0){output+=source.slice(index);break}
+      output+=source.slice(index,open);
+      const end=bannerTagEnd_(source,open+1);
+      if(end<0){output+="&lt;"+source.slice(open+1);break}
+      output+=sanitizeBannerTag_(source.slice(open+1,end));
+      index=end+1;
+    }
+    return output.trim();
+  }
+
+  function safeBannerDocument(html){
+    const body=sanitizeBannerHtml(html);
+    return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-src 'none'; connect-src 'none'"><style>html,body{margin:0;padding:0;height:100%;background:#edf3f9;color:#0b223d;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}body{overflow:auto}.banner-shell{box-sizing:border-box;min-height:100%;padding:14px}</style></head><body><div class="banner-shell">${body}</div></body></html>`;
+  }
+
+  function visualMedia(item,group,title,imageField="ImageURL",htmlField="ImageHTML",className="image-button"){
+    const image=String(item?.[imageField]||"").trim();
+    const html=String(item?.[htmlField]||"").trim();
+    if(image)return imageButton(item,group,title,imageField,className);
+    if(!html)return imageButton(item,group,title,imageField,className);
+    return `<iframe class="html-visual ${esc(className)}" sandbox="allow-popups" loading="lazy" title="${esc(title)}" srcdoc="${esc(safeBannerDocument(html))}"></iframe>`;
+  }
+
   function serviceCard(item){
     const title=item.Title||"HCS Service";
-    return `<article class="content-card">${imageButton(item,"services",title)}<div class="card-body"><span class="category">${esc(item.Category||"HCS Service")}</span><h3>${esc(title)}</h3><p>${esc(item.Description||"Professional service by HCS.")}</p><div class="card-actions"><a class="button primary small" href="${waUrl(item.WhatsAppText||`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ask Details</a></div></div></article>`;
+    return `<article class="content-card">${visualMedia(item,"services",title)}<div class="card-body"><span class="category">${esc(item.Category||"HCS Service")}</span><h3>${esc(title)}</h3><p>${esc(item.Description||"Professional service by HCS.")}</p><div class="card-actions"><a class="button primary small" href="${waUrl(item.WhatsAppText||`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ask Details</a></div></div></article>`;
   }
 
   function waUrl(message){return `https://wa.me/${encodeURIComponent(String(CFG.WHATSAPP_NUMBER||"923346395391").replace(/\D/g,""))}?text=${encodeURIComponent(message||"")}`}
@@ -195,7 +325,7 @@ const CFG = {
     return `<article class="product-card" data-product-id="${esc(item.ID)}">
       <button class="favourite-button ${saved?"saved":""}" type="button" data-favourite="${esc(item.ID)}" aria-label="${saved?"Remove from":"Save to"} favourites"><i class="bi ${saved?"bi-heart-fill":"bi-heart"}"></i></button>
       <div class="product-badges">${isNew?'<span class="badge new">New Arrival</span>':""}<span class="badge">${esc(item.Category||"Product")}</span></div>
-      ${imageButton(item,"products",title,"ImageURL","product-image")}
+      ${visualMedia(item,"products",title,"ImageURL","ImageHTML","product-image")}
       <div class="product-body"><span class="product-code">Product Code: ${esc(item.ID||"N/A")}</span><h3>${esc(title)}</h3><div class="product-brand">Brand: ${esc(item.Brand||"HCS")}</div><div class="price-row"><span class="price">Rs ${money(item.Price)}</span><span class="stock ${stock?"":"out"}">${stock?"In Stock":"Out of Stock"}</span></div>
       <div class="product-actions"><button class="button primary small" type="button" data-details="${esc(item.ID)}">View Details</button><button class="icon-button" type="button" data-share-product="${esc(item.ID)}" aria-label="Share product"><i class="bi bi-share"></i></button><a class="icon-button" href="${waUrl(item.WhatsAppText||`Mujhe ${title} (${item.ID}) order karna hai.`)}" target="_blank" rel="noopener" aria-label="Order on WhatsApp"><i class="bi bi-whatsapp"></i></a></div></div>
     </article>`;
@@ -215,13 +345,13 @@ const CFG = {
 
   async function loadData(){
     if(window.HCS_INLINE_DATA){
-      DATA=window.HCS_INLINE_DATA;renderPage();applySettings();
+      DATA=currentData(window.HCS_INLINE_DATA);renderPage();applySettings();
     }else{
       const cached=window.HCSDataCache?.read();
-      if(cached){DATA=cached;renderPage();applySettings()}
+      if(cached){DATA=currentData(cached);renderPage();applySettings()}
       try{
         const response=await fetch("data/live-data.json",{cache:"no-store"});
-        if(response.ok){DATA=await response.json();renderPage();applySettings()}
+        if(response.ok){DATA=currentData(await response.json());renderPage();applySettings()}
       }catch(error){renderPage()}
     }
     if(CFG.BACKEND_URL&&CFG.BACKEND_URL.startsWith("http"))loadRemoteData();
@@ -230,7 +360,7 @@ const CFG = {
   function loadRemoteData(){
     const script=document.createElement("script");
     const cleanup=()=>script.remove();
-    window.hcsDataCallback=data=>{if(data&&!data.error){window.HCSDataCache?.write(data);DATA=data;renderPage();applySettings()}cleanup()};
+    window.hcsDataCallback=data=>{if(data&&!data.error){window.HCSDataCache?.write(data);DATA=currentData(data);renderPage();applySettings()}cleanup()};
     script.src=`${CFG.BACKEND_URL}${CFG.BACKEND_URL.includes("?")?"&":"?"}api=public&callback=hcsDataCallback&_=${Date.now()}`;
     script.onerror=cleanup;document.body.appendChild(script);setTimeout(cleanup,9000);
   }
@@ -253,13 +383,17 @@ const CFG = {
   }
 
   function renderHome(){
-    const services=document.getElementById("home-services");if(services)services.innerHTML=(DATA.services||[]).slice(0,3).map(serviceCard).join("")||empty("Services will appear here soon.","bi-grid");
-    const product=document.getElementById("home-product");if(product)product.innerHTML=(DATA.products||[]).length?productCard(DATA.products[0]):empty("Products will appear here soon.","bi-bag");
+    const services=document.getElementById("home-services");
+    const homeServices=[...(DATA.services||[])].sort(newestFirst).slice(0,3);
+    if(services)services.innerHTML=homeServices.map(serviceCard).join("")||empty("Services will appear here soon.","bi-grid");
+    const product=document.getElementById("home-product");
+    const homeProducts=[...(DATA.products||[])].sort(newestFirst);
+    if(product)product.innerHTML=homeProducts.length?productCard(homeProducts[0]):empty("Products will appear here soon.","bi-bag");
   }
 
   function renderServices(){
     const grid=document.getElementById("services-grid"),input=document.getElementById("service-search");if(!grid)return;
-    const draw=()=>{const q=String(input?.value||"").trim().toLowerCase();const rows=(DATA.services||[]).filter(x=>[x.Title,x.Category,x.Description].join(" ").toLowerCase().includes(q));grid.innerHTML=rows.map(serviceCard).join("")||empty("No matching services found.","bi-search");document.getElementById("service-count").textContent=`${rows.length} service${rows.length===1?"":"s"}`};
+    const draw=()=>{const q=String(input?.value||"").trim().toLowerCase();const rows=[...(DATA.services||[])].sort(newestFirst).filter(x=>[x.Title,x.Category,x.Description].join(" ").toLowerCase().includes(q));grid.innerHTML=rows.map(serviceCard).join("")||empty("No matching services found.","bi-search");document.getElementById("service-count").textContent=`${rows.length} service${rows.length===1?"":"s"}`};
     if(input&&!input.dataset.bound){input.addEventListener("input",draw);input.dataset.bound="1"}draw();
   }
 
@@ -267,12 +401,12 @@ const CFG = {
     const list=document.getElementById("jobs-list"),input=document.getElementById("job-search");if(!list)return;
     const filters={department:document.getElementById("job-department-filter"),category:document.getElementById("job-category-filter"),location:document.getElementById("job-location-filter")};
     Object.entries(filters).forEach(([key,select])=>{if(!select)return;const current=jobSearchState[key];const field=key[0].toUpperCase()+key.slice(1),label={Department:"Departments",Category:"Categories",Location:"Locations"}[field];select.innerHTML=`<option value="">All ${label}</option>`+window.HCSJobSearch.options(DATA.jobs||[],field).map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join("");select.value=current});
-    const draw=()=>{jobSearchState.query=String(input?.value||"");Object.entries(filters).forEach(([key,select])=>jobSearchState[key]=select?.value||"");const rows=window.HCSJobSearch.filter(DATA.jobs||[],jobSearchState).sort(newestFirst);list.innerHTML=rows.map((job,index)=>{
+    const draw=()=>{jobSearchState.query=String(input?.value||"");Object.entries(filters).forEach(([key,select])=>jobSearchState[key]=select?.value||"");const rows=window.HCSJobSearch.filter([...(DATA.jobs||[])].sort(newestFirst),jobSearchState);list.innerHTML=rows.map((job,index)=>{
       const title=job.Title||"Job Opportunity";
       const description=job.Description||job.Qualification||"";
       const descriptionId=`job-description-${cleanId(job.ID)||index}`;
       const jobId=String(job.ID||"");
-      return `<article class="job-card" id="job-${cleanId(jobId)}" data-job-card="${esc(jobId)}">${imageButton(job,"jobs",title,"BannerURL")}<div class="job-content"><span class="category">${highlight(job.Department||"Job Opportunity",jobSearchState.query)}</span><h2>${highlight(title,jobSearchState.query)}</h2>${description?`<div class="job-description-wrap"><p class="job-description" id="${descriptionId}">${esc(description)}</p><button class="job-read-more" type="button" data-job-read-more aria-expanded="false" aria-controls="${descriptionId}">Read More <i class="bi bi-chevron-down" aria-hidden="true"></i></button></div>`:""}<div class="job-meta"><div class="meta-box"><small>Qualification</small><b>${highlight(job.Qualification||"See advertisement",jobSearchState.query)}</b></div><div class="meta-box"><small>Age</small><b>${highlight(job.Age||job.AgeLimit||"See advertisement",jobSearchState.query)}</b></div><div class="meta-box"><small>Category</small><b>${highlight(job.Category||"General",jobSearchState.query)}</b></div><div class="meta-box"><small>Last Date</small><b>${esc(job.ExtendedDate||job.LastDate||"Not specified")}</b></div><div class="meta-box"><small>Status</small><b class="status">${esc(job.ComputedStatus||job.Status||"Open")}</b></div></div><div class="card-actions">${job.ApplyLink?`<a class="button primary small" href="${esc(job.ApplyLink)}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Apply Officially</a>`:""}${job.OfficialAdURL?`<a class="button subtle small" href="${esc(job.OfficialAdURL)}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> Full Advertisement</a>`:""}<a class="button subtle small" href="${waUrl(`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ask HCS</a></div><div class="job-share-row"><span><i class="bi bi-share"></i> Share this job</span><button class="job-share-button whatsapp" type="button" data-share-job-whatsapp="${esc(jobId)}"><i class="bi bi-whatsapp"></i> WhatsApp</button><button class="job-share-button" type="button" data-share-job="${esc(jobId)}"><i class="bi bi-share-fill"></i> More</button></div></div></article>`;
+      return `<article class="job-card" id="job-${cleanId(jobId)}" data-job-card="${esc(jobId)}">${visualMedia(job,"jobs",title,"BannerURL","BannerHTML")}<div class="job-content"><span class="category">${highlight(job.Department||"Job Opportunity",jobSearchState.query)}</span><h2>${highlight(title,jobSearchState.query)}</h2>${description?`<div class="job-description-wrap"><p class="job-description" id="${descriptionId}">${esc(description)}</p><button class="job-read-more" type="button" data-job-read-more aria-expanded="false" aria-controls="${descriptionId}">Read More <i class="bi bi-chevron-down" aria-hidden="true"></i></button></div>`:""}<div class="job-meta"><div class="meta-box"><small>Qualification</small><b>${highlight(job.Qualification||"See advertisement",jobSearchState.query)}</b></div><div class="meta-box"><small>Age</small><b>${highlight(job.Age||job.AgeLimit||"See advertisement",jobSearchState.query)}</b></div><div class="meta-box"><small>Category</small><b>${highlight(job.Category||"General",jobSearchState.query)}</b></div><div class="meta-box"><small>Last Date</small><b>${esc(job.ExtendedDate||job.LastDate||"Not specified")}</b></div><div class="meta-box"><small>Status</small><b class="status">${esc(job.ComputedStatus||job.Status||"Open")}</b></div></div><div class="card-actions">${job.ApplyLink?`<a class="button primary small" href="${esc(job.ApplyLink)}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Apply Officially</a>`:""}${job.OfficialAdURL?`<a class="button subtle small" href="${esc(job.OfficialAdURL)}" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> Full Advertisement</a>`:""}<a class="button subtle small" href="${waUrl(`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ask HCS</a></div><div class="job-share-row"><span><i class="bi bi-share"></i> Share this job</span><button class="job-share-button whatsapp" type="button" data-share-job-whatsapp="${esc(jobId)}"><i class="bi bi-whatsapp"></i> WhatsApp</button><button class="job-share-button" type="button" data-share-job="${esc(jobId)}"><i class="bi bi-share-fill"></i> More</button></div></div></article>`;
     }).join("")||empty("No matching jobs found.","bi-briefcase");document.getElementById("job-count").textContent=`${rows.length} job${rows.length===1?"":"s"}`;const sharedId=new URLSearchParams(location.search).get("job");if(sharedId){const sharedCard=[...list.querySelectorAll("[data-job-card]")].find(card=>card.dataset.jobCard===sharedId);if(sharedCard){sharedCard.classList.add("shared-job");if(!list.dataset.sharedJobFocused){list.dataset.sharedJobFocused="1";requestAnimationFrame(()=>sharedCard.scrollIntoView({behavior:"smooth",block:"center"}))}}}};
     if(!list.dataset.readMoreBound){list.addEventListener("click",event=>{const button=event.target.closest("[data-job-read-more]");if(!button)return;const description=document.getElementById(button.getAttribute("aria-controls"));if(!description)return;const expanded=button.getAttribute("aria-expanded")==="true";button.setAttribute("aria-expanded",String(!expanded));description.classList.toggle("expanded",!expanded);button.innerHTML=`${expanded?"Read More":"Read Less"} <i class="bi ${expanded?"bi-chevron-down":"bi-chevron-up"}" aria-hidden="true"></i>`});list.dataset.readMoreBound="1"}
     if(input&&!input.dataset.bound){input.addEventListener("input",draw);input.dataset.bound="1";Object.values(filters).forEach(select=>select?.addEventListener("change",draw));document.getElementById("clear-job-search")?.addEventListener("click",()=>{input.value="";Object.values(filters).forEach(select=>select.value="");Object.assign(jobSearchState,{query:"",department:"",category:"",location:""});input.focus();draw()})}draw();
@@ -280,8 +414,9 @@ const CFG = {
 
   function renderDownloads(){
     const root=document.getElementById("downloads-content");if(!root)return;
-    const groups=[{title:"Software & Tools",rows:(DATA.downloads||[]).filter(x=>String(x.Category||"").toLowerCase()!=="customer data").sort(newestFirst)},{title:"Customer Data",rows:(DATA.downloads||[]).filter(x=>String(x.Category||"").toLowerCase()==="customer data").sort(newestFirst)}];
-    root.innerHTML=groups.map(group=>`<section class="download-group"><h2>${group.title}</h2><div class="card-grid card-grid-3">${group.rows.map((item,index)=>{const description=item.Description||"";const descriptionId=`download-description-${cleanId(item.ID)||index}`;return `<article class="content-card">${item.ImageURL?imageButton(item,"downloads",item.Title||"Download"):""}<div class="card-body"><span class="category">${esc(item.Category||"Download")}</span><h3>${esc(item.Title||"Download")}</h3>${description?`<div class="download-description-wrap"><p class="download-description" id="${descriptionId}">${esc(description)}</p><button class="job-read-more" type="button" data-download-read-more aria-expanded="false" aria-controls="${descriptionId}">Read More <i class="bi bi-chevron-down" aria-hidden="true"></i></button></div>`:""}<div class="card-actions">${item.URL?`<a class="button primary small" href="${esc(item.URL)}" target="_blank" rel="noopener"><i class="bi bi-download"></i> Download</a>`:""}</div></div></article>`}).join("")||empty("No files added yet.","bi-cloud-arrow-down")}</div></section>`).join("");
+    const rows=[...(DATA.downloads||[])].sort(newestFirst);
+    const groups=[{title:"Software & Tools",rows:rows.filter(x=>String(x.Category||"").toLowerCase()!=="customer data")},{title:"Customer Data",rows:rows.filter(x=>String(x.Category||"").toLowerCase()==="customer data")}];
+    root.innerHTML=groups.map(group=>`<section class="download-group"><h2>${group.title}</h2><div class="card-grid card-grid-3">${group.rows.map((item,index)=>{const description=item.Description||"";const descriptionId=`download-description-${cleanId(item.ID)||index}`;return `<article class="content-card">${visualMedia(item,"downloads",item.Title||"Download")}<div class="card-body"><span class="category">${esc(item.Category||"Download")}</span><h3>${esc(item.Title||"Download")}</h3>${description?`<div class="download-description-wrap"><p class="download-description" id="${descriptionId}">${esc(description)}</p><button class="job-read-more" type="button" data-download-read-more aria-expanded="false" aria-controls="${descriptionId}">Read More <i class="bi bi-chevron-down" aria-hidden="true"></i></button></div>`:""}<div class="card-actions">${item.URL?`<a class="button primary small" href="${esc(item.URL)}" target="_blank" rel="noopener"><i class="bi bi-download"></i> Download</a>`:""}</div></div></article>`}).join("")||empty("No files added yet.","bi-cloud-arrow-down")}</div></section>`).join("");
     if(!root.dataset.readMoreBound){root.addEventListener("click",event=>{const button=event.target.closest("[data-download-read-more]");if(!button)return;const description=document.getElementById(button.getAttribute("aria-controls"));if(!description)return;const expanded=button.getAttribute("aria-expanded")==="true";button.setAttribute("aria-expanded",String(!expanded));description.classList.toggle("expanded",!expanded);button.innerHTML=`${expanded?"Read More":"Read Less"} <i class="bi ${expanded?"bi-chevron-down":"bi-chevron-up"}" aria-hidden="true"></i>`});root.dataset.readMoreBound="1"}
   }
 
@@ -289,7 +424,7 @@ const CFG = {
     const title=item.Title||"HCS Update",description=item.Description||"",date=item.PublishDate||item.CreatedAt||"";
     const officialLink=safeHttpUrl(item.OfficialLink);
     const descriptionId=`update-description-${cleanId(item.ID)||index}`;
-    return `<article class="content-card update-card">${imageButton(item,"updates",title)}<div class="card-body"><span class="category">${esc(item.Category||"Update")}</span><h3>${esc(title)}</h3>${date?`<time class="update-date" datetime="${esc(date)}"><i class="bi bi-calendar3" aria-hidden="true"></i>${esc(date)}</time>`:""}${description?`<div class="download-description-wrap"><p class="download-description" id="${descriptionId}">${esc(description)}</p><button class="job-read-more" type="button" data-update-read-more aria-expanded="false" aria-controls="${descriptionId}">Read More <i class="bi bi-chevron-down" aria-hidden="true"></i></button></div>`:""}<div class="card-actions">${officialLink?`<a class="button primary small update-link" href="${esc(officialLink)}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Official Link</a>`:""}</div></div></article>`;
+    return `<article class="content-card update-card">${visualMedia(item,"updates",title)}<div class="card-body"><span class="category">${esc(item.Category||"Update")}</span><h3>${esc(title)}</h3>${date?`<time class="update-date" datetime="${esc(date)}"><i class="bi bi-calendar3" aria-hidden="true"></i>${esc(date)}</time>`:""}${description?`<div class="download-description-wrap"><p class="download-description" id="${descriptionId}">${esc(description)}</p><button class="job-read-more" type="button" data-update-read-more aria-expanded="false" aria-controls="${descriptionId}">Read More <i class="bi bi-chevron-down" aria-hidden="true"></i></button></div>`:""}<div class="card-actions">${officialLink?`<a class="button primary small update-link" href="${esc(officialLink)}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Official Link</a>`:""}</div></div></article>`;
   }
 
   function safeHttpUrl(value){
@@ -338,7 +473,7 @@ const CFG = {
     if(catalogState.brand)rows=rows.filter(p=>String(p.Brand||"HCS")===catalogState.brand);
     if(catalogState.stock)rows=rows.filter(p=>catalogState.stock==="in"?isInStock(p):!isInStock(p));
     if(catalogState.savedOnly)rows=rows.filter(p=>favourites.has(String(p.ID)));
-    rows.sort((a,b)=>catalogState.sort==="price-low"?Number(a.Price||0)-Number(b.Price||0):catalogState.sort==="price-high"?Number(b.Price||0)-Number(a.Price||0):catalogState.sort==="alpha"?productName(a).localeCompare(productName(b)):new Date(b.CreatedAt||0)-new Date(a.CreatedAt||0));
+    rows.sort((a,b)=>catalogState.sort==="price-low"?Number(a.Price||0)-Number(b.Price||0):catalogState.sort==="price-high"?Number(b.Price||0)-Number(a.Price||0):catalogState.sort==="alpha"?productName(a).localeCompare(productName(b)):newestFirst(a,b));
     grid.className=`product-grid ${catalogState.view==="list"?"list-view":""}`;grid.innerHTML=rows.map(productCard).join("")||empty(catalogState.savedOnly?"You have not saved any matching products.":"No matching products found.","bi-bag");
     document.getElementById("product-count").textContent=`${rows.length} product${rows.length===1?"":"s"}`;
     const saved=document.getElementById("saved-only");if(saved)saved.setAttribute("aria-pressed",String(catalogState.savedOnly));
@@ -365,8 +500,8 @@ const CFG = {
 
   function openProduct(id){
     const p=(DATA.products||[]).find(x=>String(x.ID)===String(id));if(!p)return;const title=productName(p),details=String(p.ProductDetails||p.Specifications||p.Description||"Details will be added soon.").split(/\n|•/).map(x=>x.trim()).filter(Boolean);
-    const modal=document.getElementById("product-modal");const body=modal.querySelector(".product-detail");const src=localImage(p,"products","ImageURL",900),fullImage=remoteImage(p.ImageURL,1600);
-    body.innerHTML=`<div class="product-detail-image"><img src="${esc(src)}" data-fallback="${esc(remoteImage(p.ImageURL,900))}" alt="${esc(title)}" loading="lazy" decoding="async" width="900" height="900" data-lightbox-src="${esc(fullImage||src)}" data-lightbox-title="${esc(title)}"></div><div class="product-detail-copy"><span class="category">${esc(p.Category||"HCS Product")}</span><h2>${esc(title)}</h2><div class="product-code">Product Code: ${esc(p.ID)}</div><span class="price">Rs ${money(p.Price)}</span><p><b>Brand:</b> ${esc(p.Brand||"HCS")} &nbsp; · &nbsp; <b class="${isInStock(p)?"status":"stock out"}">${isInStock(p)?"In Stock":"Out of Stock"}</b></p><h3>Complete Specifications</h3><ul class="spec-list">${details.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><a class="button primary" href="${waUrl(p.WhatsAppText||`Mujhe ${title} (${p.ID}) order karna hai.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order on WhatsApp</a></div>`;
+    const modal=document.getElementById("product-modal");const body=modal.querySelector(".product-detail");
+    body.innerHTML=`<div class="product-detail-image">${visualMedia(p,"products",title,"ImageURL","ImageHTML","product-detail-visual")}</div><div class="product-detail-copy"><span class="category">${esc(p.Category||"HCS Product")}</span><h2>${esc(title)}</h2><div class="product-code">Product Code: ${esc(p.ID)}</div><span class="price">Rs ${money(p.Price)}</span><p><b>Brand:</b> ${esc(p.Brand||"HCS")} &nbsp; · &nbsp; <b class="${isInStock(p)?"status":"stock out"}">${isInStock(p)?"In Stock":"Out of Stock"}</b></p><h3>Complete Specifications</h3><ul class="spec-list">${details.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><a class="button primary" href="${waUrl(p.WhatsAppText||`Mujhe ${title} (${p.ID}) order karna hai.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Order on WhatsApp</a></div>`;
     openModal(modal);
   }
 
@@ -393,6 +528,10 @@ const CFG = {
   }
 
   function toast(message){const box=document.getElementById("toast");box.textContent=message;box.classList.add("show");setTimeout(()=>box.classList.remove("show"),2300)}
+
+  window.visualMedia=visualMedia;
+  window.safeBannerDocument=safeBannerDocument;
+  window.openHcsProduct=openProduct;
 
   document.addEventListener("click",event=>{
     const emptySocial=event.target.closest("[data-empty-social]");if(emptySocial){event.preventDefault();toast("This social media link will be added soon.");return}
