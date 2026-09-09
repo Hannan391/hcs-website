@@ -56,7 +56,7 @@ async function renderApp(page,data={},extraElements={},runtime={}){
     body,
     getElementById:id=>elements.get(id)||null,
     querySelector:()=>null,
-    querySelectorAll:()=>[],
+    querySelectorAll:selector=>selector==="[data-social-links]"?(runtime.socialContainers||[]):[],
     createElement:()=>({remove(){}}),
     addEventListener(){}
   };
@@ -114,6 +114,22 @@ test("shared desktop and mobile navigation temporarily hide update-page links",a
       last=current;
     }
   }
+});
+
+test("social buttons render with official brand-color classes",async()=>{
+  const social=fakeElement();
+  await renderApp("home",{}, {},{socialContainers:[social]});
+  const styles=await readFile(new URL("../assets/styles.css",import.meta.url),"utf8");
+
+  for(const brand of ["youtube","facebook","instagram","whatsapp","tiktok"]){
+    assert.match(social.innerHTML,new RegExp(`class="social-link social-${brand}`));
+    assert.match(styles,new RegExp(`\\.social-${brand}\\{[^}]*background:`));
+  }
+  assert.match(styles,/\.social-youtube\{[^}]*background:#ff0000/i);
+  assert.match(styles,/\.social-facebook\{[^}]*background:#1877f2/i);
+  assert.match(styles,/\.social-instagram\{[^}]*linear-gradient/i);
+  assert.match(styles,/\.social-whatsapp\{[^}]*background:#25d366/i);
+  assert.match(styles,/\.social-tiktok\{[^}]*background:#000/i);
 });
 
 test("update cards sort newest first and safely render optional content",async()=>{

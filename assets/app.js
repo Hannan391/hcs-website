@@ -116,7 +116,7 @@ const CFG = {
     document.querySelectorAll("[data-social-links]").forEach(container=>{
       container.innerHTML=Object.entries(socialMeta).map(([key,meta])=>{
         const url=safeSocialUrl(links[key]);
-        return `<a class="social-link ${url?"":"disabled"}" href="${esc(url||"#")}" ${url?'target="_blank" rel="noopener"':'aria-disabled="true" data-empty-social="true"'} title="${url?meta.label:meta.label+" link will be added soon"}"><i class="bi ${meta.icon}"></i><span>${meta.label}</span></a>`;
+        return `<a class="social-link social-${key} ${url?"":"disabled"}" href="${esc(url||"#")}" ${url?'target="_blank" rel="noopener"':'aria-disabled="true" data-empty-social="true"'} title="${url?meta.label:meta.label+" link will be added soon"}"><i class="bi ${meta.icon}"></i><span>${meta.label}</span></a>`;
       }).join("");
     });
   }

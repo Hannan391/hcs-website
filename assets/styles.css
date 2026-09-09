@@ -117,3 +117,4 @@ main>section{content-visibility:auto;contain-intrinsic-size:700px}
 .ask-hcs-button{border:1px solid #86efac;background:#ecfdf3;color:#15803d}.ask-hcs-button:hover{background:#dcfce7;color:#166534}
 .job-title{color:#14532d}
 .job-description{color:#000}
+.social-link[class*="social-"]{border-color:transparent!important;color:#fff!important;box-shadow:0 6px 16px rgba(0,0,0,.16)}.social-link[class*="social-"]:hover{filter:brightness(1.08);transform:translateY(-2px)}.social-youtube{background:#ff0000!important}.social-facebook{background:#1877f2!important}.social-instagram{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)!important}.social-whatsapp{background:#25d366!important}.social-tiktok{background:#000!important}
