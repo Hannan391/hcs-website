@@ -126,6 +126,11 @@ test("job titles use the approved dark-green visual treatment",async()=>{
   assert.match(styles,/\.job-title\{[^}]*color:#14532d/i);
 });
 
+test("job descriptions use full-black readable text",async()=>{
+  const styles=await readFile(new URL("../assets/styles.css",import.meta.url),"utf8");
+  assert.match(styles,/\.job-description\{[^}]*color:#000(?:000)?(?:;|})/i);
+});
+
 test("HTML media renders as a clear sandboxed preview with a separate HD download",async()=>{
   const root=fakeElement();
   await render("services",{services:[
