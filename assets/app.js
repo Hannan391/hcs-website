@@ -319,7 +319,14 @@ const CFG = {
 
   function serviceCard(item){
     const title=item.Title||"HCS Service";
-    return `<article class="content-card">${visualMedia(item,"services",title)}<div class="card-body"><span class="category">${esc(item.Category||"HCS Service")}</span><h3>${esc(title)}</h3><p>${esc(item.Description||"Professional service by HCS.")}</p><div class="card-actions"><a class="button primary small" href="${waUrl(item.WhatsAppText||`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ask Details</a></div></div></article>`;
+    return `<article class="content-card service-card">${serviceIconVisual(title)}<div class="card-body"><span class="category">${esc(item.Category||"HCS Service")}</span><h3>${esc(title)}</h3><p>${esc(item.Description||"Professional service by HCS.")}</p><div class="card-actions"><a class="button primary small" href="${waUrl(item.WhatsAppText||`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ask Details</a></div></div></article>`;
+  }
+
+  function serviceIconVisual(title){
+    const text=String(title||"").toLowerCase();
+    const rules=[[/photo studio|studio/,"camera"],[/computer/,"pc-display"],[/software|windows|hardware/,"windows"],[/job|educational/,"briefcase"],[/fbr|tax/,"calculator"],[/govt|scheme/,"bank"],[/online apply/,"send-check"],[/online/,"globe"],[/panaflex/,"easel"],[/wedding/,"envelope-heart"],[/visiting/,"person-vcard"],[/stamp/,"patch-check"],[/brochure/,"file-earmark-richtext"],[/sticker/,"sticky"],[/staff/,"person-badge"],[/student/,"mortarboard"],[/pvc|fee card/,"credit-card"],[/scanning/,"upc-scan"],[/toner/,"printer-fill"],[/excise/,"car-front"],[/token/,"receipt"],[/binding/,"journal-bookmark"],[/cv/,"file-person"],[/composing/,"keyboard"],[/development/,"code-square"],[/marketing/,"megaphone"],[/print|photocop/,"printer"]];
+    const icon=(rules.find(([pattern])=>pattern.test(text))||[,"gear-wide-connected"])[1];
+    return `<div class="service-icon-visual" aria-hidden="true"><span class="service-icon-orbit"></span><i class="bi bi-${icon}"></i></div>`;
   }
 
   function waUrl(message){return `https://wa.me/${encodeURIComponent(String(CFG.WHATSAPP_NUMBER||"923346395391").replace(/\D/g,""))}?text=${encodeURIComponent(message||"")}`}

@@ -65,6 +65,19 @@ test("frontend ordering uses the same timestamp-encoded ID fallback",async()=>{
   assert.ok(invalid.innerHTML.indexOf("Valid time")<invalid.innerHTML.indexOf("Invalid time"));
 });
 
+test("service cards use lightweight title-matched vector icons instead of banner media",async()=>{
+  const root=fakeElement();
+  await render("services",{services:[
+    {ID:"SV1",Title:"Color Photocopies & Prints",ImageURL:"https://example.com/heavy.jpg"},
+    {ID:"SV2",Title:"Computer Sale & Service",ImageHTML:"<div>heavy</div>"},
+    {ID:"SV3",Title:"Photo Studio"}
+  ]},{"services-grid":root,"service-count":fakeElement()});
+  assert.doesNotMatch(root.innerHTML,/<img\b|<iframe\b/);
+  assert.match(root.innerHTML,/class="service-icon-visual[^>]*>[\s\S]*bi-printer/);
+  assert.match(root.innerHTML,/bi-pc-display/);
+  assert.match(root.innerHTML,/bi-camera/);
+});
+
 test("product details use shared safe visual media",async()=>{
   const body=fakeElement(),modal=fakeElement();modal.querySelector=selector=>selector===".product-detail"?body:null;
   const {window}=await render("catalog",{products:[dated("HTML Product","2026-08-01",{ImageHTML:"<div>Product offer</div>"})]},{"products-grid":fakeElement(),"product-count":fakeElement(),"product-modal":modal});
@@ -133,11 +146,11 @@ test("job descriptions use full-black readable text",async()=>{
 
 test("HTML media renders as a clear sandboxed preview with a separate HD download",async()=>{
   const root=fakeElement();
-  await render("services",{services:[
+  await render("downloads",{downloads:[
     dated("HTML Post","2026-08-03",{ImageHTML:'<div class="banner"><strong>Offer</strong></div>'}),
     dated("Image Post","2026-08-02",{ImageURL:"https://example.com/image.jpg"}),
     dated("Dual Post","2026-08-01",{ImageURL:"https://example.com/preferred.jpg",ImageHTML:"<div>ignored</div>"})
-  ]},{"services-grid":root,"service-count":fakeElement()});
+  ]},{"downloads-content":root});
 
   assert.equal((root.innerHTML.match(/<iframe\b/g)||[]).length,1);
   assert.match(root.innerHTML,/class="html-visual image-button"/);
@@ -153,7 +166,7 @@ test("HTML media renders as a clear sandboxed preview with a separate HD downloa
 
 test("HTML banner download is a sanitized vector-HD file",async()=>{
   const root=fakeElement();
-  await render("services",{services:[dated("HD Job","2026-08-01",{ImageHTML:'<section style="background:#fff"><h2>HD Banner</h2><script>alert(1)</script></section>'})]},{"services-grid":root,"service-count":fakeElement()});
+  await render("downloads",{downloads:[dated("HD Job","2026-08-01",{ImageHTML:'<section style="background:#fff"><h2>HD Banner</h2><script>alert(1)</script></section>'})]},{"downloads-content":root});
   const encoded=root.innerHTML.match(/href="data:image\/svg\+xml;charset=utf-8,([^"]+)"/)?.[1]||"";
   const svg=decodeURIComponent(encoded.replaceAll("&amp;","&"));
   assert.match(svg,/<svg[^>]+width="2400"[^>]+height="1576"[^>]+viewBox="0 0 1200 788"/);
@@ -164,7 +177,7 @@ test("HTML banner download is a sanitized vector-HD file",async()=>{
 
 test("HTML banner SVG stays XML-safe for ampersands, named entities, and unbalanced HTML",async()=>{
   const root=fakeElement();
-  await render("services",{services:[dated("XML-safe Job","2026-08-01",{ImageHTML:"<div><p>A & B&nbsp;&copy;&mdash;&euro;<strong>Offer</div>"})]},{"services-grid":root,"service-count":fakeElement()});
+  await render("downloads",{downloads:[dated("XML-safe Job","2026-08-01",{ImageHTML:"<div><p>A & B&nbsp;&copy;&mdash;&euro;<strong>Offer</div>"})]},{"downloads-content":root});
   const svg=decodeDownloadSvg(root.innerHTML);
   assert.match(svg,/A &amp; B&#160;©—€/);
   assert.match(svg,/<div><p>A [\s\S]*<strong>Offer<\/strong><\/p><\/div>/);
@@ -179,7 +192,7 @@ function decodeDownloadSvg(markup){
 
 test("safe HTML banner images remove executable or outbound markup",async()=>{
   const root=fakeElement();
-  await render("services",{services:[dated("Safe Job","2026-08-01",{ImageHTML:'<div onclick="alert(1)" style="color:red;background-image:url(data:text/html,bad)"><script>alert(1)</script><form><input></form><iframe src="https://evil.test"></iframe><a href="javascript:alert(1)">Bad</a><a href="https://example.com">Good</a></div>'})]},{"services-grid":root,"service-count":fakeElement()});
+  await render("downloads",{downloads:[dated("Safe Job","2026-08-01",{ImageHTML:'<div onclick="alert(1)" style="color:red;background-image:url(data:text/html,bad)"><script>alert(1)</script><form><input></form><iframe src="https://evil.test"></iframe><a href="javascript:alert(1)">Bad</a><a href="https://example.com">Good</a></div>'})]},{"downloads-content":root});
 
   const doc=decodeVisualDocument(root.innerHTML);
   assert.doesNotMatch(doc,/<script|\son\w+\s*=|<form|<iframe|javascript:|data:/i);
@@ -207,7 +220,7 @@ test("safe HTML documents preserve named entities in hrefs once",async()=>{
 
   for(const testCase of cases){
     const root=fakeElement();
-    await render("services",{services:[dated(`Href ${testCase.label}`,"2026-08-01",{ImageHTML:testCase.html})]},{"services-grid":root,"service-count":fakeElement()});
+    await render("downloads",{downloads:[dated(`Href ${testCase.label}`,"2026-08-01",{ImageHTML:testCase.html})]},{"downloads-content":root});
 
     const doc=decodeVisualDocument(root.innerHTML);
     if(testCase.href){
@@ -226,7 +239,7 @@ test("safe HTML documents reject entity-obfuscated javascript hrefs",async()=>{
 
   for(const testCase of cases){
     const root=fakeElement();
-    await render("services",{services:[dated(`Href block ${testCase.label}`,"2026-08-01",{ImageHTML:testCase.html})]},{"services-grid":root,"service-count":fakeElement()});
+    await render("downloads",{downloads:[dated(`Href block ${testCase.label}`,"2026-08-01",{ImageHTML:testCase.html})]},{"downloads-content":root});
 
     const doc=decodeVisualDocument(root.innerHTML);
     assert.doesNotMatch(doc,/javascript:/i);
@@ -246,7 +259,7 @@ test("safe HTML documents reject restored numeric and named CSS hazards",async()
 
   for(const testCase of cases){
     const root=fakeElement();
-    await render("services",{services:[dated(`CSS ${testCase.label}`,"2026-08-01",{ImageHTML:testCase.html})]},{"services-grid":root,"service-count":fakeElement()});
+    await render("downloads",{downloads:[dated(`CSS ${testCase.label}`,"2026-08-01",{ImageHTML:testCase.html})]},{"downloads-content":root});
 
     const doc=decodeVisualDocument(root.innerHTML);
     assert.doesNotMatch(doc,testCase.blocked);
@@ -257,7 +270,7 @@ test("safe HTML documents reject restored numeric and named CSS hazards",async()
 
 test("safe HTML documents keep entity-obfuscated data URLs out of CSS",async()=>{
   const root=fakeElement();
-  await render("services",{services:[dated("Data CSS","2026-08-01",{ImageHTML:`<div style="background:url(data&colon;text/html,bad); color:rgb(12,34,56)">Visual</div>`})]},{"services-grid":root,"service-count":fakeElement()});
+  await render("downloads",{downloads:[dated("Data CSS","2026-08-01",{ImageHTML:`<div style="background:url(data&colon;text/html,bad); color:rgb(12,34,56)">Visual</div>`})]},{"downloads-content":root});
 
   const doc=decodeVisualDocument(root.innerHTML);
   assert.doesNotMatch(doc,/data:/i);
