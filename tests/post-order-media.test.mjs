@@ -76,6 +76,10 @@ test("service cards use lightweight title-matched vector icons instead of banner
   assert.match(root.innerHTML,/class="service-icon-visual[^>]*>[\s\S]*bi-printer/);
   assert.match(root.innerHTML,/bi-pc-display/);
   assert.match(root.innerHTML,/bi-camera/);
+  const styles=await readFile(new URL("../assets/styles.css",import.meta.url),"utf8");
+  assert.match(styles,/\.service-icon-visual\{[^}]*height:150px/);
+  assert.match(styles,/\.service-icon-visual\{[^}]*#0369a1[^}]*#083b66/);
+  assert.match(styles,/\.service-icon-visual \.bi\{[^}]*perspective|\.service-icon-visual \.bi\{[^}]*rotateX/);
 });
 
 test("product details use shared safe visual media",async()=>{
