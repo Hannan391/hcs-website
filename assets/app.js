@@ -57,10 +57,10 @@ const CFG = {
       <header class="site-header">
         <div class="shell nav-wrap">
           <a class="brand" href="index.html" aria-label="HCS home"><span class="brand-mark">HCS</span><span class="brand-copy"><b>Hannan Computers</b><small>& Printers</small></span></a>
-          <nav class="desktop-nav" aria-label="Main navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("govt-schemes.html","Govt Schemes","schemes")}${navLink("education-updates.html","Education Updates","education")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
+          <nav class="desktop-nav" aria-label="Main navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
           <div class="header-actions"><a class="saved-link" href="catalog.html?saved=1"><i class="bi bi-heart"></i> Saved <span data-saved-count>${favourites.size}</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><i class="bi bi-list"></i></button></div>
         </div>
-        <nav class="mobile-nav" aria-label="Mobile navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("govt-schemes.html","Govt Schemes","schemes")}${navLink("education-updates.html","Education Updates","education")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
+        <nav class="mobile-nav" aria-label="Mobile navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
       </header>`;
     if(footer)footer.innerHTML=`
       <footer class="site-footer">

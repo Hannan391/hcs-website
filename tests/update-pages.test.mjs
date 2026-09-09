@@ -96,7 +96,7 @@ test("update pages expose the correct modes, content roots, and shared assets",a
   }
 });
 
-test("shared desktop and mobile navigation place both update pages immediately after Jobs",async()=>{
+test("shared desktop and mobile navigation temporarily hide update-page links",async()=>{
   for(const page of publicPages){
     const html=await readFile(new URL(`../${page}`,import.meta.url),"utf8");
     assert.match(html,/src=["']assets\/app\.js["'][^>]*defer/,`${page} must load the shared navigation`);
@@ -105,7 +105,8 @@ test("shared desktop and mobile navigation place both update pages immediately a
   const {header}=await renderApp("home");
   for(const className of ["desktop-nav","mobile-nav"]){
     const nav=header.innerHTML.match(new RegExp(`<nav class="${className}"[^>]*>([\\s\\S]*?)<\\/nav>`))?.[1]||"";
-    const order=["index.html","services.html","jobs.html","govt-schemes.html","education-updates.html","downloads.html","catalog.html","contact.html"];
+    assert.doesNotMatch(nav,/href="(?:govt-schemes|education-updates)\.html"/);
+    const order=["index.html","services.html","jobs.html","downloads.html","catalog.html","contact.html"];
     let last=-1;
     for(const href of order){
       const current=nav.indexOf(`href="${href}"`);
