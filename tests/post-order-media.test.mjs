@@ -90,6 +90,28 @@ test("all six public sections render newest records before older records",async(
   }
 });
 
+test("job cards hide banners and open HTML or JPEG from Short Advertisement",async()=>{
+  const list=fakeElement(),modal=fakeElement(),content=fakeElement(),heading=fakeElement();
+  modal.querySelector=selector=>selector===".short-ad-content"?content:selector===".short-ad-title"?heading:null;
+  const {window}=await render("jobs",{jobs:[
+    dated("HTML Job","2026-08-02",{BannerHTML:"<div><strong>Clear HTML</strong></div>",PublicHiddenFrom:0}),
+    dated("JPEG Job","2026-08-01",{BannerURL:"https://example.com/job.jpg",PublicHiddenFrom:0})
+  ]},{"jobs-list":list,"job-count":fakeElement(),"job-search":fakeElement(),"short-ad-modal":modal});
+
+  assert.equal((list.innerHTML.match(/data-short-advertisement=/g)||[]).length,2);
+  assert.match(list.innerHTML,/Short Advertisement/);
+  assert.doesNotMatch(list.innerHTML,/<iframe\b|<img\b|class="html-media"/);
+
+  window.openShortAdvertisement("html-job");
+  assert.match(content.innerHTML,/<iframe[^>]+srcdoc=/);
+  assert.match(content.innerHTML,/Download HD/);
+  assert.equal(heading.textContent,"HTML Job");
+
+  window.openShortAdvertisement("jpeg-job");
+  assert.match(content.innerHTML,/<img[^>]+job\.jpg/);
+  assert.doesNotMatch(content.innerHTML,/<iframe/);
+});
+
 test("HTML media renders as a clear sandboxed preview with a separate HD download",async()=>{
   const root=fakeElement();
   await render("services",{services:[
@@ -112,7 +134,7 @@ test("HTML media renders as a clear sandboxed preview with a separate HD downloa
 
 test("HTML banner download is a sanitized vector-HD file",async()=>{
   const root=fakeElement();
-  const {window}=await render("jobs",{jobs:[dated("HD Job","2026-08-01",{BannerHTML:'<section style="background:#fff"><h2>HD Banner</h2><script>alert(1)</script></section>'})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
+  await render("services",{services:[dated("HD Job","2026-08-01",{ImageHTML:'<section style="background:#fff"><h2>HD Banner</h2><script>alert(1)</script></section>'})]},{"services-grid":root,"service-count":fakeElement()});
   const encoded=root.innerHTML.match(/href="data:image\/svg\+xml;charset=utf-8,([^"]+)"/)?.[1]||"";
   const svg=decodeURIComponent(encoded.replaceAll("&amp;","&"));
   assert.match(svg,/<svg[^>]+width="2400"[^>]+height="1576"[^>]+viewBox="0 0 1200 788"/);
@@ -123,7 +145,7 @@ test("HTML banner download is a sanitized vector-HD file",async()=>{
 
 test("HTML banner SVG stays XML-safe for ampersands, named entities, and unbalanced HTML",async()=>{
   const root=fakeElement();
-  const {window}=await render("jobs",{jobs:[dated("XML-safe Job","2026-08-01",{BannerHTML:"<div><p>A & B&nbsp;&copy;&mdash;&euro;<strong>Offer</div>"})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
+  await render("services",{services:[dated("XML-safe Job","2026-08-01",{ImageHTML:"<div><p>A & B&nbsp;&copy;&mdash;&euro;<strong>Offer</div>"})]},{"services-grid":root,"service-count":fakeElement()});
   const svg=decodeDownloadSvg(root.innerHTML);
   assert.match(svg,/A &amp; B&#160;©—€/);
   assert.match(svg,/<div><p>A [\s\S]*<strong>Offer<\/strong><\/p><\/div>/);
@@ -138,7 +160,7 @@ function decodeDownloadSvg(markup){
 
 test("safe HTML banner images remove executable or outbound markup",async()=>{
   const root=fakeElement();
-  await render("jobs",{jobs:[dated("Safe Job","2026-08-01",{BannerHTML:'<div onclick="alert(1)" style="color:red;background-image:url(data:text/html,bad)"><script>alert(1)</script><form><input></form><iframe src="https://evil.test"></iframe><a href="javascript:alert(1)">Bad</a><a href="https://example.com">Good</a></div>'})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
+  await render("services",{services:[dated("Safe Job","2026-08-01",{ImageHTML:'<div onclick="alert(1)" style="color:red;background-image:url(data:text/html,bad)"><script>alert(1)</script><form><input></form><iframe src="https://evil.test"></iframe><a href="javascript:alert(1)">Bad</a><a href="https://example.com">Good</a></div>'})]},{"services-grid":root,"service-count":fakeElement()});
 
   const doc=decodeVisualDocument(root.innerHTML);
   assert.doesNotMatch(doc,/<script|\son\w+\s*=|<form|<iframe|javascript:|data:/i);
@@ -166,7 +188,7 @@ test("safe HTML documents preserve named entities in hrefs once",async()=>{
 
   for(const testCase of cases){
     const root=fakeElement();
-    await render("jobs",{jobs:[dated(`Href ${testCase.label}`,"2026-08-01",{BannerHTML:testCase.html})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
+    await render("services",{services:[dated(`Href ${testCase.label}`,"2026-08-01",{ImageHTML:testCase.html})]},{"services-grid":root,"service-count":fakeElement()});
 
     const doc=decodeVisualDocument(root.innerHTML);
     if(testCase.href){
@@ -185,7 +207,7 @@ test("safe HTML documents reject entity-obfuscated javascript hrefs",async()=>{
 
   for(const testCase of cases){
     const root=fakeElement();
-    await render("jobs",{jobs:[dated(`Href block ${testCase.label}`,"2026-08-01",{BannerHTML:testCase.html})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
+    await render("services",{services:[dated(`Href block ${testCase.label}`,"2026-08-01",{ImageHTML:testCase.html})]},{"services-grid":root,"service-count":fakeElement()});
 
     const doc=decodeVisualDocument(root.innerHTML);
     assert.doesNotMatch(doc,/javascript:/i);
@@ -205,7 +227,7 @@ test("safe HTML documents reject restored numeric and named CSS hazards",async()
 
   for(const testCase of cases){
     const root=fakeElement();
-    await render("jobs",{jobs:[dated(`CSS ${testCase.label}`,"2026-08-01",{BannerHTML:testCase.html})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
+    await render("services",{services:[dated(`CSS ${testCase.label}`,"2026-08-01",{ImageHTML:testCase.html})]},{"services-grid":root,"service-count":fakeElement()});
 
     const doc=decodeVisualDocument(root.innerHTML);
     assert.doesNotMatch(doc,testCase.blocked);
@@ -216,7 +238,7 @@ test("safe HTML documents reject restored numeric and named CSS hazards",async()
 
 test("safe HTML documents keep entity-obfuscated data URLs out of CSS",async()=>{
   const root=fakeElement();
-  await render("jobs",{jobs:[dated("Data CSS","2026-08-01",{BannerHTML:`<div style="background:url(data&colon;text/html,bad); color:rgb(12,34,56)">Visual</div>`})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
+  await render("services",{services:[dated("Data CSS","2026-08-01",{ImageHTML:`<div style="background:url(data&colon;text/html,bad); color:rgb(12,34,56)">Visual</div>`})]},{"services-grid":root,"service-count":fakeElement()});
 
   const doc=decodeVisualDocument(root.innerHTML);
   assert.doesNotMatch(doc,/data:/i);
