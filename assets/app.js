@@ -281,12 +281,63 @@ const CFG = {
     return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-src 'none'; connect-src 'none'"><style>html,body{margin:0;padding:0;height:100%;background:#edf3f9;color:#0b223d;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}body{overflow:auto}.banner-shell{box-sizing:border-box;min-height:100%;padding:14px}</style></head><body><div class="banner-shell">${body}</div></body></html>`;
   }
 
+  function xmlSafeBannerHtml_(html){
+    const sanitized=sanitizeBannerHtml(html),stack=[];
+    return (sanitized.match(/<[^>]*>|[^<]+/g)||[]).map(part=>{
+      if(part.charAt(0)!=="<"){
+        const entities={nbsp:"&#160;",copy:"©",reg:"®",trade:"™",ndash:"–",mdash:"—",hellip:"…",bull:"•",middot:"·",laquo:"«",raquo:"»",euro:"€",pound:"£",yen:"¥",cent:"¢"};
+        return part.replace(/&([a-z]+);/gi,(match,name)=>entities[name.toLowerCase()]||match).replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-f]+);)/gi,"&amp;");
+      }
+      const closing=part.match(/^<\/([a-z0-9]+)>$/i);
+      if(closing){
+        const tag=closing[1].toLowerCase(),position=stack.lastIndexOf(tag);
+        if(position<0)return "";
+        return stack.splice(position).reverse().map(open=>`</${open}>`).join("");
+      }
+      const opening=part.match(/^<([a-z0-9]+)/i),tag=opening?opening[1].toLowerCase():"";
+      if(!tag)return "";
+      if(tag==="br")return "<br/>";
+      stack.push(tag);
+      return part;
+    }).join("")+stack.reverse().map(tag=>`</${tag}>`).join("");
+  }
+
+  function bannerSvgDataUrl(html,title){
+    const body=xmlSafeBannerHtml_(html);
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="788" viewBox="0 0 1200 788"><title>${esc(title||"HCS Banner")}</title><foreignObject width="1200" height="788"><div xmlns="http://www.w3.org/1999/xhtml" style="box-sizing:border-box;width:1200px;height:788px;overflow:hidden;background:#edf3f9;color:#0b223d;font-family:Arial,sans-serif">${body}</div></foreignObject></svg>`;
+    return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+  }
+
+  function fallbackHtmlBannerImage(image){
+    if(!image||image.dataset.hdBanner==="fallback")return;
+    image.dataset.hdBanner="fallback";
+    const title=esc(image.alt||"HCS Banner");
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="788" viewBox="0 0 1200 788"><rect width="1200" height="788" fill="#edf3f9"/><text x="600" y="370" text-anchor="middle" fill="#0b223d" font-family="Arial,sans-serif" font-size="58" font-weight="700">HCS</text><text x="600" y="440" text-anchor="middle" fill="#58708c" font-family="Arial,sans-serif" font-size="30">${title}</text></svg>`;
+    image.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+  }
+
+  function upgradeHtmlBannerImage(image){
+    if(!image||image.dataset.hdBanner!=="pending")return;
+    image.dataset.hdBanner="rendering";
+    try{
+      const scale=2,canvas=document.createElement("canvas");
+      canvas.width=1200*scale;canvas.height=788*scale;
+      const context=canvas.getContext("2d");
+      if(!context)throw new Error("Canvas is unavailable");
+      context.drawImage(image,0,0,canvas.width,canvas.height);
+      image.dataset.hdBanner="ready";
+      image.src=canvas.toDataURL("image/png",1);
+    }catch(error){
+      image.dataset.hdBanner="vector";
+    }
+  }
+
   function visualMedia(item,group,title,imageField="ImageURL",htmlField="ImageHTML",className="image-button"){
     const image=String(item?.[imageField]||"").trim();
     const html=String(item?.[htmlField]||"").trim();
     if(image)return imageButton(item,group,title,imageField,className);
     if(!html)return imageButton(item,group,title,imageField,className);
-    return `<iframe class="html-visual ${esc(className)}" sandbox="allow-popups" loading="lazy" title="${esc(title)}" srcdoc="${esc(safeBannerDocument(html))}"></iframe>`;
+    return `<img class="html-visual ${esc(className)}" src="${esc(bannerSvgDataUrl(html,title))}" data-hd-banner="pending" onload="window.upgradeHtmlBannerImage(this)" onerror="window.fallbackHtmlBannerImage(this)" alt="${esc(title)}" title="Right-click to save this HD banner" loading="lazy" decoding="async" width="1200" height="788">`;
   }
 
   function serviceCard(item){
@@ -531,6 +582,9 @@ const CFG = {
 
   window.visualMedia=visualMedia;
   window.safeBannerDocument=safeBannerDocument;
+  window.upgradeHtmlBannerImage=upgradeHtmlBannerImage;
+  window.upgradeHtmlBannerImages=upgradeHtmlBannerImage;
+  window.fallbackHtmlBannerImage=fallbackHtmlBannerImage;
   window.openHcsProduct=openProduct;
 
   document.addEventListener("click",event=>{

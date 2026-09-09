@@ -70,8 +70,8 @@ test("product details use shared safe visual media",async()=>{
   const {window}=await render("catalog",{products:[dated("HTML Product","2026-08-01",{ImageHTML:"<div>Product offer</div>"})]},{"products-grid":fakeElement(),"product-count":fakeElement(),"product-modal":modal});
   window.openHcsProduct("html-product");
   assert.match(body.innerHTML,/product-detail-image/);
-  assert.match(body.innerHTML,/<iframe[^>]+product-detail-visual/);
-  assert.doesNotMatch(body.innerHTML,/<div class="product-detail-image"><img/);
+  assert.match(body.innerHTML,/<img[^>]+product-detail-visual/);
+  assert.match(body.innerHTML,/data-hd-banner="pending"/);
 });
 
 test("all six public sections render newest records before older records",async()=>{
@@ -90,7 +90,7 @@ test("all six public sections render newest records before older records",async(
   }
 });
 
-test("HTML media uses a sandboxed frame, while image media and dual media prefer the optimized image",async()=>{
+test("HTML media renders as a right-click-saveable HD image, while uploaded and dual media prefer the optimized image",async()=>{
   const root=fakeElement();
   await render("services",{services:[
     dated("HTML Post","2026-08-03",{ImageHTML:'<div class="banner"><strong>Offer</strong></div>'}),
@@ -98,32 +98,55 @@ test("HTML media uses a sandboxed frame, while image media and dual media prefer
     dated("Dual Post","2026-08-01",{ImageURL:"https://example.com/preferred.jpg",ImageHTML:"<div>ignored</div>"})
   ]},{"services-grid":root,"service-count":fakeElement()});
 
-  assert.equal((root.innerHTML.match(/<iframe\b/g)||[]).length,1);
-  assert.match(root.innerHTML,/class="html-visual image-button"/);
-  assert.match(root.innerHTML,/sandbox="allow-popups"/);
+  assert.equal((root.innerHTML.match(/<iframe\b/g)||[]).length,0);
+  assert.match(root.innerHTML,/<img[^>]+class="html-visual image-button"/);
+  assert.match(root.innerHTML,/src="data:image\/svg\+xml/);
+  assert.match(root.innerHTML,/data-hd-banner/);
+  assert.match(root.innerHTML,/width="1200" height="788"/);
   assert.match(root.innerHTML,/loading="lazy"/);
-  assert.equal((root.innerHTML.match(/<img\b/g)||[]).length,2);
+  assert.equal((root.innerHTML.match(/<img\b/g)||[]).length,3);
   assert.match(root.innerHTML,/preferred\.jpg/);
   assert.doesNotMatch(root.innerHTML,/ignored/);
 });
 
-test("safe HTML documents enforce CSP and remove executable or outbound markup",async()=>{
+test("HTML banner image source contains the sanitized 1200 by 788 vector and a 2x PNG upgrade path",async()=>{
+  const root=fakeElement();
+  const {window}=await render("jobs",{jobs:[dated("HD Job","2026-08-01",{BannerHTML:'<section style="background:#fff"><h2>HD Banner</h2><script>alert(1)</script></section>'})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
+  const encoded=root.innerHTML.match(/src="data:image\/svg\+xml;charset=utf-8,([^"]+)"/)?.[1]||"";
+  const svg=decodeURIComponent(encoded.replaceAll("&amp;","&"));
+  assert.match(svg,/<svg[^>]+width="1200"[^>]+height="788"[^>]+viewBox="0 0 1200 788"/);
+  assert.match(svg,/HD Banner/);
+  assert.doesNotMatch(svg,/<script/i);
+  assert.equal(typeof window.upgradeHtmlBannerImages,"function");
+  assert.match(window.upgradeHtmlBannerImages.toString(),/scale\s*=\s*2/);
+  assert.match(window.upgradeHtmlBannerImages.toString(),/toDataURL\(["']image\/png["']/);
+});
+
+test("HTML banner SVG stays XML-safe for ampersands, named entities, and unbalanced HTML",async()=>{
+  const root=fakeElement();
+  const {window}=await render("jobs",{jobs:[dated("XML-safe Job","2026-08-01",{BannerHTML:"<div><p>A & B&nbsp;&copy;&mdash;&euro;<strong>Offer</div>"})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
+  const svg=decodeVisualDocument(root.innerHTML);
+  assert.match(svg,/A &amp; B&#160;©—€/);
+  assert.match(svg,/<div><p>A [\s\S]*<strong>Offer<\/strong><\/p><\/div>/);
+  assert.doesNotMatch(svg,/A & B|&(?:nbsp|copy|mdash|euro);/);
+  assert.match(root.innerHTML,/onerror="window\.fallbackHtmlBannerImage\(this\)"/);
+  assert.equal(typeof window.fallbackHtmlBannerImage,"function");
+});
+
+test("safe HTML banner images remove executable or outbound markup",async()=>{
   const root=fakeElement();
   await render("jobs",{jobs:[dated("Safe Job","2026-08-01",{BannerHTML:'<div onclick="alert(1)" style="color:red;background-image:url(data:text/html,bad)"><script>alert(1)</script><form><input></form><iframe src="https://evil.test"></iframe><a href="javascript:alert(1)">Bad</a><a href="https://example.com">Good</a></div>'})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
 
-  const encoded=root.innerHTML.match(/srcdoc="([^"]*)"/)?.[1]||"";
-  const doc=encoded.replaceAll("&quot;",'"').replaceAll("&#39;","'").replaceAll("&lt;","<").replaceAll("&gt;",">").replaceAll("&amp;","&");
-  assert.match(doc,/Content-Security-Policy/);
-  assert.match(doc,/default-src 'none'/);
-  assert.match(doc,/style-src 'unsafe-inline'/);
-  assert.match(doc,/form-action 'none'/);
-  assert.match(doc,/frame-src 'none'/);
+  const doc=decodeVisualDocument(root.innerHTML);
   assert.doesNotMatch(doc,/<script|\son\w+\s*=|<form|<iframe|javascript:|data:/i);
-  assert.doesNotMatch(root.innerHTML,/allow-scripts|allow-same-origin|allow-forms/i);
+  assert.match(doc,/https:\/\/example\.com/);
 });
 
-function decodeSrcdocValue(value){
-  return String(value||"").replaceAll("&quot;",'"').replaceAll("&#39;","'").replaceAll("&lt;","<").replaceAll("&gt;",">").replaceAll("&amp;","&");
+function decodeVisualDocument(markup){
+  const svg=String(markup||"").match(/src="data:image\/svg\+xml;charset=utf-8,([^"]+)"/)?.[1]||"";
+  if(svg)return decodeURIComponent(svg.replaceAll("&amp;","&"));
+  const srcdoc=String(markup||"").match(/srcdoc="([^"]*)"/)?.[1]||"";
+  return srcdoc.replaceAll("&quot;",'"').replaceAll("&#39;","'").replaceAll("&lt;","<").replaceAll("&gt;",">").replaceAll("&amp;","&");
 }
 
 function escapeRegExp(value){
@@ -142,8 +165,7 @@ test("safe HTML documents preserve named entities in hrefs once",async()=>{
     const root=fakeElement();
     await render("jobs",{jobs:[dated(`Href ${testCase.label}`,"2026-08-01",{BannerHTML:testCase.html})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
 
-    const encoded=root.innerHTML.match(/srcdoc="([^"]*)"/)?.[1]||"";
-    const doc=decodeSrcdocValue(encoded);
+    const doc=decodeVisualDocument(root.innerHTML);
     if(testCase.href){
       assert.match(doc,new RegExp(`href="${escapeRegExp(testCase.href)}"`));
       assert.doesNotMatch(doc,/&amp;amp;|&quot;amp;|&#39;amp;/);
@@ -162,8 +184,7 @@ test("safe HTML documents reject entity-obfuscated javascript hrefs",async()=>{
     const root=fakeElement();
     await render("jobs",{jobs:[dated(`Href block ${testCase.label}`,"2026-08-01",{BannerHTML:testCase.html})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
 
-    const encoded=root.innerHTML.match(/srcdoc="([^"]*)"/)?.[1]||"";
-    const doc=decodeSrcdocValue(encoded);
+    const doc=decodeVisualDocument(root.innerHTML);
     assert.doesNotMatch(doc,/javascript:/i);
     assert.doesNotMatch(doc,/href="/i);
   }
@@ -183,8 +204,7 @@ test("safe HTML documents reject restored numeric and named CSS hazards",async()
     const root=fakeElement();
     await render("jobs",{jobs:[dated(`CSS ${testCase.label}`,"2026-08-01",{BannerHTML:testCase.html})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
 
-    const encoded=root.innerHTML.match(/srcdoc="([^"]*)"/)?.[1]||"";
-    const doc=decodeSrcdocValue(encoded);
+    const doc=decodeVisualDocument(root.innerHTML);
     assert.doesNotMatch(doc,testCase.blocked);
     if(testCase.label==="numeric url")assert.doesNotMatch(doc,/url\s*\(/i);
     assert.match(doc,/rgb\(12,34,56\)/i);
@@ -195,8 +215,7 @@ test("safe HTML documents keep entity-obfuscated data URLs out of CSS",async()=>
   const root=fakeElement();
   await render("jobs",{jobs:[dated("Data CSS","2026-08-01",{BannerHTML:`<div style="background:url(data&colon;text/html,bad); color:rgb(12,34,56)">Visual</div>`})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
 
-  const encoded=root.innerHTML.match(/srcdoc="([^"]*)"/)?.[1]||"";
-  const doc=decodeSrcdocValue(encoded);
+  const doc=decodeVisualDocument(root.innerHTML);
   assert.doesNotMatch(doc,/data:/i);
   assert.doesNotMatch(doc,/url\s*\(/i);
   assert.match(doc,/rgb\(12,34,56\)/i);
