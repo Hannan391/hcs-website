@@ -101,6 +101,11 @@ test("job cards hide banners and open HTML or JPEG from Short Advertisement",asy
   assert.equal((list.innerHTML.match(/data-short-advertisement=/g)||[]).length,2);
   assert.match(list.innerHTML,/Short Advertisement/);
   assert.doesNotMatch(list.innerHTML,/<iframe\b|<img\b|class="html-media"/);
+  assert.match(list.innerHTML,/class="category job-department"/);
+  for(const className of ["qualification-meta","age-meta","category-meta","date-meta"]){
+    assert.match(list.innerHTML,new RegExp(`class="meta-box ${className}"`));
+  }
+  assert.match(list.innerHTML,/class="button short-ad-button small"/);
 
   window.openShortAdvertisement("html-job");
   assert.match(content.innerHTML,/<iframe[^>]+srcdoc=/);

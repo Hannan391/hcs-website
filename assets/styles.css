@@ -104,3 +104,14 @@ main>section{content-visibility:auto;contain-intrinsic-size:700px}
   .job-card .html-visual{height:250px;min-height:0}
   .product-grid.list-view .product-image,.product-grid.list-view .product-image.html-visual{height:235px}
 }
+
+/* Jobs: calm, meaning-based color system */
+.job-department{border:1px solid #bfdbfe;background:#eaf4ff;color:#0759b6}
+.job-status{border:1px solid #bbf7d0;background:#ecfdf3;color:#15803d}
+.qualification-meta{border-color:#bfdbfe;background:#eff6ff}.qualification-meta small,.qualification-meta small i{color:#1d4ed8}
+.age-meta{border-color:#ddd6fe;background:#f5f3ff}.age-meta small,.age-meta small i{color:#7c3aed}
+.category-meta{border-color:#fed7aa;background:#fff7ed}.category-meta small,.category-meta small i{color:#c2410c}
+.date-meta{border-color:#fde68a;background:#fffbeb}.date-meta small,.date-meta small i{color:#a16207}.date-meta b{color:#92400e}
+.full-ad-button{border:1px solid #173f72;background:#173f72;color:#fff}.full-ad-button:hover{background:#0b2d57;color:#fff}
+.short-ad-button{border-color:#eab308;background:#fef9c3;color:#713f12}.short-ad-button:hover{background:#facc15;color:#422006}
+.ask-hcs-button{border:1px solid #86efac;background:#ecfdf3;color:#15803d}.ask-hcs-button:hover{background:#dcfce7;color:#166534}
