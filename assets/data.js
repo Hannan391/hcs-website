@@ -323,5 +323,6 @@ window.HCS_INLINE_DATA={
       "Quantity": 10,
       "CreatedAt": "2026-09-01"
     }
-  ]
+  ],
+  "knowledge": []
 };

@@ -7,6 +7,7 @@ const publicPages=[
   "index.html",
   "services.html",
   "jobs.html",
+  "knowledge.html",
   "govt-schemes.html",
   "education-updates.html",
   "downloads.html",
@@ -106,7 +107,7 @@ test("shared desktop and mobile navigation temporarily hide update-page links",a
   for(const className of ["desktop-nav","mobile-nav"]){
     const nav=header.innerHTML.match(new RegExp(`<nav class="${className}"[^>]*>([\\s\\S]*?)<\\/nav>`))?.[1]||"";
     assert.doesNotMatch(nav,/href="(?:govt-schemes|education-updates)\.html"/);
-    const order=["index.html","services.html","jobs.html","downloads.html","catalog.html","contact.html"];
+    const order=["index.html","services.html","jobs.html","knowledge.html","downloads.html","catalog.html","contact.html"];
     let last=-1;
     for(const href of order){
       const current=nav.indexOf(`href="${href}"`);

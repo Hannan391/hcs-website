@@ -16,7 +16,7 @@ const CFG = {
   "use strict";
 
   const PAGE=document.body.dataset.page||"home";
-  let DATA={settings:{},services:[],jobs:[],downloads:[],products:[],schemes:[],education:[]};
+  let DATA={settings:{},services:[],jobs:[],downloads:[],products:[],schemes:[],education:[],knowledge:[]};
   let favourites=new Set(JSON.parse(localStorage.getItem("hcs-favourites")||"[]"));
   const catalogState={search:"",brand:"",stock:"",sort:"newest",view:localStorage.getItem("hcs-catalog-view")||"grid",savedOnly:false};
   const jobSearchState={query:"",department:"",category:"",location:""};
@@ -57,10 +57,10 @@ const CFG = {
       <header class="site-header">
         <div class="shell nav-wrap">
           <a class="brand" href="index.html" aria-label="HCS home"><span class="brand-mark">HCS</span><span class="brand-copy"><b>Hannan Computers</b><small>& Printers</small></span></a>
-          <nav class="desktop-nav" aria-label="Main navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
+          <nav class="desktop-nav" aria-label="Main navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("knowledge.html","Knowledge","knowledge")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
           <div class="header-actions"><a class="saved-link" href="catalog.html?saved=1"><i class="bi bi-heart"></i> Saved <span data-saved-count>${favourites.size}</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-label="Open menu"><i class="bi bi-list"></i></button></div>
         </div>
-        <nav class="mobile-nav" aria-label="Mobile navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
+        <nav class="mobile-nav" aria-label="Mobile navigation">${navLink("index.html","Home","home")}${navLink("services.html","Services","services")}${navLink("jobs.html","Jobs","jobs")}${navLink("knowledge.html","Knowledge","knowledge")}${navLink("downloads.html","Downloads","downloads")}${navLink("catalog.html","Catalog","catalog")}${navLink("contact.html","Contact","contact")}</nav>
       </header>`;
     if(footer)footer.innerHTML=`
       <footer class="site-footer">
@@ -404,6 +404,7 @@ const CFG = {
     if(PAGE==="home")renderHome();
     if(PAGE==="services")renderServices();
     if(PAGE==="jobs")renderJobs();
+    if(PAGE==="knowledge")renderKnowledge();
     if(PAGE==="schemes")renderUpdates("schemes","schemes-content");
     if(PAGE==="education")renderUpdates("education","education-content");
     if(PAGE==="downloads")renderDownloads();
@@ -474,6 +475,11 @@ const CFG = {
     root.innerHTML=rows.map(updateCard).join("")||empty("No updates added yet.","bi-megaphone");
     bindUpdateReadMore(root);
   }
+
+  function knowledgeCard(item){const title=item.Title||"Knowledge Article",featured=item.Featured===true||String(item.Featured).toLowerCase()==="true";return `<article class="content-card knowledge-card ${featured?"knowledge-featured":""}">${visualMedia(item,"knowledge",title)}<div class="card-body">${featured?'<span class="featured-badge"><i class="bi bi-star-fill"></i> Featured</span>':""}<span class="category">${esc(item.Category||"General")}</span><h2>${esc(title)}</h2>${item.PublishDate?`<time class="knowledge-date"><i class="bi bi-calendar3"></i> ${esc(item.PublishDate)}</time>`:""}<p class="knowledge-description">${esc(item.Description||"")}</p><div class="knowledge-actions"><button class="button primary small" type="button" data-knowledge-read="${esc(item.ID)}">Read More</button><button class="icon-button" type="button" data-share-knowledge-whatsapp="${esc(item.ID)}" aria-label="Share on WhatsApp"><i class="bi bi-whatsapp"></i></button><button class="icon-button" type="button" data-share-knowledge="${esc(item.ID)}" aria-label="Share article"><i class="bi bi-share-fill"></i></button></div></div></article>`}
+  function renderKnowledge(){const grid=document.getElementById("knowledge-grid"),search=document.getElementById("knowledge-search"),category=document.getElementById("knowledge-category");if(!grid)return;const draw=()=>{const q=String(search?.value||"").trim().toLowerCase(),selected=category?.value||"";let rows=[...(DATA.knowledge||[])].sort(newestFirst),categories=[...new Set(rows.map(x=>String(x.Category||"General").trim()).filter(Boolean))].sort();if(category){category.innerHTML='<option value="">All Categories</option>'+categories.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");category.value=selected}rows=rows.filter(x=>(!q||[x.Title,x.Category,x.Description].join(" ").toLowerCase().includes(q))&&(!selected||String(x.Category||"General")===selected));grid.innerHTML=rows.map(knowledgeCard).join("")||empty("No matching articles found.","bi-journal-richtext");document.getElementById("knowledge-count").textContent=`${rows.length} article${rows.length===1?"":"s"}`};if(search&&!search.dataset.bound){search.addEventListener("input",draw);category?.addEventListener("change",draw);search.dataset.bound="1"}draw();const shared=new URLSearchParams(location.search).get("article");if(shared&&!grid.dataset.sharedOpened){grid.dataset.sharedOpened="1";setTimeout(()=>openKnowledgeArticle(shared),0)}}
+  function openKnowledgeArticle(id){const item=(DATA.knowledge||[]).find(x=>String(x.ID)===String(id)),modal=document.getElementById("knowledge-modal");if(!item||!modal)return;const title=item.Title||"Knowledge Article";modal.querySelector(".knowledge-modal-content").innerHTML=`${visualMedia(item,"knowledge",title,"ImageURL","ImageHTML","knowledge-modal-visual")}<div class="knowledge-modal-copy"><span class="category">${esc(item.Category||"General")}</span><h2>${esc(title)}</h2><div class="knowledge-full-description">${esc(item.Description||"").replace(/\n/g,"<br>")}</div><div class="knowledge-actions"><button class="button whatsapp" data-share-knowledge-whatsapp="${esc(item.ID)}"><i class="bi bi-whatsapp"></i> WhatsApp</button><button class="button primary" data-share-knowledge="${esc(item.ID)}"><i class="bi bi-share-fill"></i> Share</button></div></div>`;openModal(modal)}
+  async function shareKnowledge(id,whatsapp=false){const item=(DATA.knowledge||[]).find(x=>String(x.ID)===String(id));if(!item)return;const url=`${location.origin}/knowledge.html?article=${encodeURIComponent(item.ID)}`,text=`${item.Title||"HCS Knowledge"}\n${url}`;if(whatsapp){window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank","noopener");return}try{if(navigator.share)await navigator.share({title:item.Title,text:String(item.Description||"").slice(0,160),url});else{await navigator.clipboard.writeText(text);toast("Article link copied.")}}catch(error){if(error.name!=="AbortError")toast("Sharing is not available.")}}
 
   function empty(message,icon){return `<div class="empty-state"><i class="bi ${icon}"></i>${esc(message)}</div>`}
 
@@ -546,6 +552,7 @@ const CFG = {
   }
 
   function createModals(){
+    document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="knowledge-modal" role="dialog" aria-modal="true" aria-label="Knowledge article"><div class="modal-backdrop" data-close-modal></div><div class="knowledge-modal-card"><button class="icon-button knowledge-modal-close" type="button" data-close-modal aria-label="Close article"><i class="bi bi-x-lg"></i></button><div class="knowledge-modal-content"></div></div></div>`);
     document.body.insertAdjacentHTML("beforeend",`<div class="modal" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer"><div class="modal-backdrop" data-close-modal></div><div class="lightbox-dialog"><div class="lightbox-top"><span class="lightbox-title"></span><button type="button" data-close-modal aria-label="Close image"><i class="bi bi-x-lg"></i></button></div><div class="lightbox-stage"><img alt="Full image"></div><div class="lightbox-controls"><button type="button" data-zoom-out aria-label="Zoom out"><i class="bi bi-dash-lg"></i></button><span class="zoom-level">100%</span><button type="button" data-zoom-in aria-label="Zoom in"><i class="bi bi-plus-lg"></i></button><button type="button" data-zoom-reset aria-label="Fit to screen"><i class="bi bi-arrows-angle-contract"></i></button></div></div></div><div class="modal" id="product-modal" role="dialog" aria-modal="true" aria-label="Product details"><div class="modal-backdrop" data-close-modal></div><div class="product-modal-card"><button class="icon-button product-modal-close" type="button" data-close-modal aria-label="Close product details"><i class="bi bi-x-lg"></i></button><div class="product-detail"></div></div></div><div class="modal" id="short-ad-modal" role="dialog" aria-modal="true" aria-label="Short Advertisement"><div class="modal-backdrop" data-close-modal></div><div class="short-ad-dialog"><div class="short-ad-head"><h2 class="short-ad-title">Short Advertisement</h2><button class="icon-button" type="button" data-close-modal aria-label="Close short advertisement"><i class="bi bi-x-lg"></i></button></div><div class="short-ad-content"></div></div></div><div id="toast" class="toast" role="status"></div>`);
     setupLightbox();
   }
@@ -573,6 +580,7 @@ const CFG = {
   window.safeBannerDocument=safeBannerDocument;
   window.openHcsProduct=openProduct;
   window.openShortAdvertisement=openShortAdvertisement;
+  window.openKnowledgeArticle=openKnowledgeArticle;
 
   document.addEventListener("click",event=>{
     const emptySocial=event.target.closest("[data-empty-social]");if(emptySocial){event.preventDefault();toast("This social media link will be added soon.");return}
@@ -580,6 +588,9 @@ const CFG = {
     const favourite=event.target.closest("[data-favourite]");if(favourite){toggleFavourite(favourite.dataset.favourite);return}
     const detail=event.target.closest("[data-details]");if(detail){openProduct(detail.dataset.details);return}
     const shortAd=event.target.closest("[data-short-advertisement]");if(shortAd){openShortAdvertisement(shortAd.dataset.shortAdvertisement);return}
+    const knowledgeRead=event.target.closest("[data-knowledge-read]");if(knowledgeRead){openKnowledgeArticle(knowledgeRead.dataset.knowledgeRead);return}
+    const knowledgeWhatsApp=event.target.closest("[data-share-knowledge-whatsapp]");if(knowledgeWhatsApp){shareKnowledge(knowledgeWhatsApp.dataset.shareKnowledgeWhatsapp,true);return}
+    const knowledgeShare=event.target.closest("[data-share-knowledge]");if(knowledgeShare){shareKnowledge(knowledgeShare.dataset.shareKnowledge);return}
     const share=event.target.closest("[data-share-product]");if(share){shareProduct(share.dataset.shareProduct);return}
     const jobWhatsApp=event.target.closest("[data-share-job-whatsapp]");if(jobWhatsApp){shareJobWhatsApp(jobWhatsApp.dataset.shareJobWhatsapp);return}
     const jobShare=event.target.closest("[data-share-job]");if(jobShare){shareJob(jobShare.dataset.shareJob);return}

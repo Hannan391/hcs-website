@@ -1,10 +1,10 @@
 (function(window,storage){
   "use strict";
 
-  const KEY="hcs-public-data-v4";
+  const KEY="hcs-public-data-v5";
 
   function valid(data){
-    return data&&typeof data==="object"&&!Array.isArray(data)&&data.settings&&typeof data.settings==="object"&&!Array.isArray(data.settings)&&["services","jobs","downloads","products","schemes","education"].every(key=>Array.isArray(data[key]))&&data.jobs.every(job=>job&&Object.prototype.hasOwnProperty.call(job,"PublicHiddenFrom")&&Number.isFinite(Number(job.PublicHiddenFrom))&&Number(job.PublicHiddenFrom)>=0);
+    return data&&typeof data==="object"&&!Array.isArray(data)&&data.settings&&typeof data.settings==="object"&&!Array.isArray(data.settings)&&["services","jobs","downloads","products","schemes","education","knowledge"].every(key=>Array.isArray(data[key]))&&data.jobs.every(job=>job&&Object.prototype.hasOwnProperty.call(job,"PublicHiddenFrom")&&Number.isFinite(Number(job.PublicHiddenFrom))&&Number(job.PublicHiddenFrom)>=0);
   }
 
   window.HCSDataCache={
