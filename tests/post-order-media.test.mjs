@@ -117,6 +117,15 @@ test("job cards hide banners and open HTML or JPEG from Short Advertisement",asy
   assert.doesNotMatch(content.innerHTML,/<iframe/);
 });
 
+test("job titles use the approved dark-green visual treatment",async()=>{
+  const list=fakeElement();
+  await render("jobs",{jobs:[dated("Forest Job","2026-08-02",{PublicHiddenFrom:0})]},{"jobs-list":list,"job-count":fakeElement(),"job-search":fakeElement()});
+  const styles=await readFile(new URL("../assets/styles.css",import.meta.url),"utf8");
+
+  assert.match(list.innerHTML,/<h2 class="job-title">Forest Job<\/h2>/);
+  assert.match(styles,/\.job-title\{[^}]*color:#14532d/i);
+});
+
 test("HTML media renders as a clear sandboxed preview with a separate HD download",async()=>{
   const root=fakeElement();
   await render("services",{services:[
