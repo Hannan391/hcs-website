@@ -189,18 +189,18 @@ test("cached public data renders before the live-data request settles",async()=>
   assert.match(root.innerHTML,/Cached scheme/);
 });
 
-test("update HTML media is right-click-saveable HD and prefers an uploaded image when both values exist",async()=>{
+test("update HTML media uses a clear preview and separate HD download",async()=>{
   const root=fakeElement();
   await renderApp("education",{education:[
     {ID:"html",Title:"HTML update",ImageHTML:"<div>Safe visual</div>"},
     {ID:"dual",Title:"Dual update",ImageURL:"https://example.com/image.jpg",ImageHTML:"<div>Ignored visual</div>"}
   ]},{"education-content":root});
 
-  assert.equal((root.innerHTML.match(/<iframe\b/g)||[]).length,0);
-  assert.equal((root.innerHTML.match(/<img\b/g)||[]).length,2);
-  assert.match(root.innerHTML,/src="data:image\/svg\+xml/);
-  assert.match(root.innerHTML,/data-hd-banner="pending"/);
-  assert.match(root.innerHTML,/width="1200" height="788"/);
+  assert.equal((root.innerHTML.match(/<iframe\b/g)||[]).length,1);
+  assert.equal((root.innerHTML.match(/<img\b/g)||[]).length,1);
+  assert.match(root.innerHTML,/sandbox="allow-popups"/);
+  assert.match(root.innerHTML,/class="html-download"/);
+  assert.match(root.innerHTML,/Download HD/);
   assert.doesNotMatch(root.innerHTML,/Ignored visual/);
 });
 

@@ -308,36 +308,13 @@ const CFG = {
     return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
   }
 
-  function fallbackHtmlBannerImage(image){
-    if(!image||image.dataset.hdBanner==="fallback")return;
-    image.dataset.hdBanner="fallback";
-    const title=esc(image.alt||"HCS Banner");
-    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1576" viewBox="0 0 1200 788"><rect width="1200" height="788" fill="#edf3f9"/><text x="600" y="370" text-anchor="middle" fill="#0b223d" font-family="Arial,sans-serif" font-size="58" font-weight="700">HCS</text><text x="600" y="440" text-anchor="middle" fill="#58708c" font-family="Arial,sans-serif" font-size="30">${title}</text></svg>`;
-    image.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
-  }
-
-  function upgradeHtmlBannerImage(image){
-    if(!image||image.dataset.hdBanner!=="pending")return;
-    image.dataset.hdBanner="rendering";
-    try{
-      const scale=2,canvas=document.createElement("canvas");
-      canvas.width=1200*scale;canvas.height=788*scale;
-      const context=canvas.getContext("2d");
-      if(!context)throw new Error("Canvas is unavailable");
-      context.drawImage(image,0,0,canvas.width,canvas.height);
-      image.dataset.hdBanner="ready";
-      image.src=canvas.toDataURL("image/png",1);
-    }catch(error){
-      image.dataset.hdBanner="vector";
-    }
-  }
-
   function visualMedia(item,group,title,imageField="ImageURL",htmlField="ImageHTML",className="image-button"){
     const image=String(item?.[imageField]||"").trim();
     const html=String(item?.[htmlField]||"").trim();
     if(image)return imageButton(item,group,title,imageField,className);
     if(!html)return imageButton(item,group,title,imageField,className);
-    return `<img class="html-visual ${esc(className)}" src="${esc(bannerSvgDataUrl(html,title))}" data-hd-banner="pending" onload="window.upgradeHtmlBannerImage(this)" onerror="window.fallbackHtmlBannerImage(this)" alt="${esc(title)}" title="Right-click to save this HD banner" loading="lazy" decoding="async" width="1200" height="788">`;
+    const fileName=(String(title||"hcs-banner").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"hcs-banner")+"-hd.svg";
+    return `<div class="html-media"><iframe class="html-visual ${esc(className)}" sandbox="allow-popups" loading="lazy" title="${esc(title)}" srcdoc="${esc(safeBannerDocument(html))}"></iframe><a class="html-download" href="${esc(bannerSvgDataUrl(html,title))}" download="${esc(fileName)}"><i class="bi bi-download"></i> Download HD</a></div>`;
   }
 
   function serviceCard(item){
@@ -582,9 +559,6 @@ const CFG = {
 
   window.visualMedia=visualMedia;
   window.safeBannerDocument=safeBannerDocument;
-  window.upgradeHtmlBannerImage=upgradeHtmlBannerImage;
-  window.upgradeHtmlBannerImages=upgradeHtmlBannerImage;
-  window.fallbackHtmlBannerImage=fallbackHtmlBannerImage;
   window.openHcsProduct=openProduct;
 
   document.addEventListener("click",event=>{

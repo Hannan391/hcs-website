@@ -70,8 +70,8 @@ test("product details use shared safe visual media",async()=>{
   const {window}=await render("catalog",{products:[dated("HTML Product","2026-08-01",{ImageHTML:"<div>Product offer</div>"})]},{"products-grid":fakeElement(),"product-count":fakeElement(),"product-modal":modal});
   window.openHcsProduct("html-product");
   assert.match(body.innerHTML,/product-detail-image/);
-  assert.match(body.innerHTML,/<img[^>]+product-detail-visual/);
-  assert.match(body.innerHTML,/data-hd-banner="pending"/);
+  assert.match(body.innerHTML,/<iframe[^>]+product-detail-visual/);
+  assert.match(body.innerHTML,/class="html-download"/);
 });
 
 test("all six public sections render newest records before older records",async()=>{
@@ -90,7 +90,7 @@ test("all six public sections render newest records before older records",async(
   }
 });
 
-test("HTML media renders as a right-click-saveable HD image, while uploaded and dual media prefer the optimized image",async()=>{
+test("HTML media renders as a clear sandboxed preview with a separate HD download",async()=>{
   const root=fakeElement();
   await render("services",{services:[
     dated("HTML Post","2026-08-03",{ImageHTML:'<div class="banner"><strong>Offer</strong></div>'}),
@@ -98,40 +98,43 @@ test("HTML media renders as a right-click-saveable HD image, while uploaded and 
     dated("Dual Post","2026-08-01",{ImageURL:"https://example.com/preferred.jpg",ImageHTML:"<div>ignored</div>"})
   ]},{"services-grid":root,"service-count":fakeElement()});
 
-  assert.equal((root.innerHTML.match(/<iframe\b/g)||[]).length,0);
-  assert.match(root.innerHTML,/<img[^>]+class="html-visual image-button"/);
-  assert.match(root.innerHTML,/src="data:image\/svg\+xml/);
-  assert.match(root.innerHTML,/data-hd-banner/);
-  assert.match(root.innerHTML,/width="1200" height="788"/);
+  assert.equal((root.innerHTML.match(/<iframe\b/g)||[]).length,1);
+  assert.match(root.innerHTML,/class="html-visual image-button"/);
+  assert.match(root.innerHTML,/sandbox="allow-popups"/);
+  assert.match(root.innerHTML,/srcdoc=/);
+  assert.match(root.innerHTML,/<a[^>]+class="html-download"[^>]+data:image\/svg\+xml/);
+  assert.match(root.innerHTML,/download="html-post-hd\.svg"/);
   assert.match(root.innerHTML,/loading="lazy"/);
-  assert.equal((root.innerHTML.match(/<img\b/g)||[]).length,3);
+  assert.equal((root.innerHTML.match(/<img\b/g)||[]).length,2);
   assert.match(root.innerHTML,/preferred\.jpg/);
   assert.doesNotMatch(root.innerHTML,/ignored/);
 });
 
-test("HTML banner image source has a true 2400 by 1576 raster surface and a 1200 by 788 layout",async()=>{
+test("HTML banner download is a sanitized vector-HD file",async()=>{
   const root=fakeElement();
   const {window}=await render("jobs",{jobs:[dated("HD Job","2026-08-01",{BannerHTML:'<section style="background:#fff"><h2>HD Banner</h2><script>alert(1)</script></section>'})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
-  const encoded=root.innerHTML.match(/src="data:image\/svg\+xml;charset=utf-8,([^"]+)"/)?.[1]||"";
+  const encoded=root.innerHTML.match(/href="data:image\/svg\+xml;charset=utf-8,([^"]+)"/)?.[1]||"";
   const svg=decodeURIComponent(encoded.replaceAll("&amp;","&"));
   assert.match(svg,/<svg[^>]+width="2400"[^>]+height="1576"[^>]+viewBox="0 0 1200 788"/);
   assert.match(svg,/HD Banner/);
   assert.doesNotMatch(svg,/<script/i);
-  assert.equal(typeof window.upgradeHtmlBannerImages,"function");
-  assert.match(window.upgradeHtmlBannerImages.toString(),/scale\s*=\s*2/);
-  assert.match(window.upgradeHtmlBannerImages.toString(),/toDataURL\(["']image\/png["']/);
+  assert.match(root.innerHTML,/Download HD/);
 });
 
 test("HTML banner SVG stays XML-safe for ampersands, named entities, and unbalanced HTML",async()=>{
   const root=fakeElement();
   const {window}=await render("jobs",{jobs:[dated("XML-safe Job","2026-08-01",{BannerHTML:"<div><p>A & B&nbsp;&copy;&mdash;&euro;<strong>Offer</div>"})]},{"jobs-list":root,"job-count":fakeElement(),"job-search":fakeElement()});
-  const svg=decodeVisualDocument(root.innerHTML);
+  const svg=decodeDownloadSvg(root.innerHTML);
   assert.match(svg,/A &amp; B&#160;©—€/);
   assert.match(svg,/<div><p>A [\s\S]*<strong>Offer<\/strong><\/p><\/div>/);
   assert.doesNotMatch(svg,/A & B|&(?:nbsp|copy|mdash|euro);/);
-  assert.match(root.innerHTML,/onerror="window\.fallbackHtmlBannerImage\(this\)"/);
-  assert.equal(typeof window.fallbackHtmlBannerImage,"function");
+  assert.match(root.innerHTML,/sandbox="allow-popups"/);
 });
+
+function decodeDownloadSvg(markup){
+  const encoded=String(markup||"").match(/href="data:image\/svg\+xml;charset=utf-8,([^"]+)"/)?.[1]||"";
+  return decodeURIComponent(encoded.replaceAll("&amp;","&"));
+}
 
 test("safe HTML banner images remove executable or outbound markup",async()=>{
   const root=fakeElement();
