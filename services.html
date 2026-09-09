@@ -13,10 +13,34 @@
 <body data-page="services">
   <div id="site-header"></div>
   <main>
-    <section class="page-hero"><div class="shell"><span class="eyebrow">HCS SERVICES</span><h1>Professional services, delivered carefully.</h1><p>Explore printing, digital, computer and documentation services. Select any image to view it clearly.</p></div></section>
-    <section class="section shell">
-      <div class="toolbar simple-toolbar"><label class="search-field"><i class="bi bi-search"></i><input id="service-search" type="search" placeholder="Search services..." aria-label="Search services"></label><span id="service-count" class="result-count"></span></div>
-      <div id="services-grid" class="card-grid card-grid-3 loading-grid" aria-live="polite"></div>
+    <section class="services-showcase">
+      <div class="shell">
+        <nav id="service-category-tabs" class="service-category-tabs" aria-label="Service categories">
+          <button class="active" type="button" data-service-filter="all"><i class="bi bi-briefcase"></i> All Services</button>
+          <button type="button" data-service-filter="printing"><i class="bi bi-file-earmark-text"></i> Printing &amp; Documentation</button>
+          <button type="button" data-service-filter="government"><i class="bi bi-bank"></i> Online &amp; Government</button>
+          <button type="button" data-service-filter="computer"><i class="bi bi-pc-display"></i> Computer Solutions</button>
+          <button type="button" data-service-filter="education"><i class="bi bi-mortarboard"></i> Education &amp; Jobs</button>
+        </nav>
+        <div id="services-heading" class="services-heading">
+          <div><span class="eyebrow">OUR SERVICES</span><h1>Complete Solutions for <span>Your Needs</span></h1><p>Explore our wide range of professional services designed to make your work easier, faster and better.</p></div>
+          <label class="search-field service-search"><i class="bi bi-search"></i><input id="service-search" type="search" placeholder="Search services..." aria-label="Search services"></label>
+        </div>
+        <div class="services-result-row"><span id="service-count" class="result-count"></span></div>
+        <div id="services-grid" class="services-dashboard-grid loading-grid" aria-live="polite"></div>
+        <div id="service-stats" class="service-stats" aria-label="Why customers choose HCS">
+          <div><i class="bi bi-people"></i><span><strong>10+</strong><small>Years of Experience</small></span></div>
+          <div><i class="bi bi-emoji-smile"></i><span><strong>5000+</strong><small>Happy Customers</small></span></div>
+          <div><i class="bi bi-clock"></i><span><strong>Fast</strong><small>Service Delivery</small></span></div>
+          <div><i class="bi bi-shield-check"></i><span><strong>100%</strong><small>Customer Satisfaction</small></span></div>
+        </div>
+        <div id="services-contact-strip" class="services-contact-strip">
+          <div><strong>Need Assistance?</strong><small>We are always here to help you.</small></div>
+          <a href="tel:+923346395391"><i class="bi bi-telephone-fill"></i><span><b>0334-6395391</b><small>Call or WhatsApp</small></span></a>
+          <a href="mailto:alhannancomputers@gmail.com"><i class="bi bi-envelope-fill"></i><span><b>alhannancomputers@gmail.com</b><small>Send us an Email</small></span></a>
+          <a class="button primary" href="https://wa.me/923346395391" target="_blank" rel="noopener">Get in Touch <i class="bi bi-arrow-right"></i></a>
+        </div>
+      </div>
     </section>
   </main>
   <div id="site-footer"></div>

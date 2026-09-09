@@ -319,7 +319,16 @@ const CFG = {
 
   function serviceCard(item){
     const title=item.Title||"HCS Service";
-    return `<article class="content-card service-card">${serviceIconVisual(title)}<div class="card-body"><span class="category">${esc(item.Category||"HCS Service")}</span><h3>${esc(title)}</h3><p>${esc(item.Description||"Professional service by HCS.")}</p><div class="card-actions"><a class="button primary small" href="${waUrl(item.WhatsAppText||`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ask Details</a></div></div></article>`;
+    const group=serviceGroup(title);
+    return `<article class="content-card service-card compact-service-card" data-service-group="${group}">${serviceIconVisual(title)}<div class="card-body"><h3>${esc(title)}</h3><p>${esc(item.Description||"Professional service by HCS.")}</p><a class="service-explore" href="${waUrl(item.WhatsAppText||`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener">Explore <i class="bi bi-arrow-right"></i></a></div><a class="service-arrow" href="${waUrl(item.WhatsAppText||`Mujhe ${title} ki details chahiye.`)}" target="_blank" rel="noopener" aria-label="Explore ${esc(title)}"><i class="bi bi-chevron-right"></i></a></article>`;
+  }
+
+  function serviceGroup(title){
+    const text=String(title||"").toLowerCase();
+    if(/job|education|student|staff/.test(text))return "education";
+    if(/computer|software|windows|hardware|development|marketing/.test(text))return "computer";
+    if(/fbr|tax|govt|scheme|online|excise|token/.test(text))return "government";
+    return "printing";
   }
 
   function serviceIconVisual(title){
@@ -428,8 +437,10 @@ const CFG = {
   }
 
   function renderServices(){
-    const grid=document.getElementById("services-grid"),input=document.getElementById("service-search");if(!grid)return;
-    const draw=()=>{const q=String(input?.value||"").trim().toLowerCase();const rows=[...(DATA.services||[])].sort(newestFirst).filter(x=>[x.Title,x.Category,x.Description].join(" ").toLowerCase().includes(q));grid.innerHTML=rows.map(serviceCard).join("")||empty("No matching services found.","bi-search");document.getElementById("service-count").textContent=`${rows.length} service${rows.length===1?"":"s"}`};
+    const grid=document.getElementById("services-grid"),input=document.getElementById("service-search"),tabs=document.getElementById("service-category-tabs");if(!grid)return;
+    let active=tabs?.querySelector?.("[data-service-filter].active")?.dataset.serviceFilter||"all";
+    const draw=()=>{const q=String(input?.value||"").trim().toLowerCase();const rows=[...(DATA.services||[])].sort(newestFirst).filter(x=>(active==="all"||serviceGroup(x.Title)===active)&&[x.Title,x.Category,x.Description].join(" ").toLowerCase().includes(q));grid.innerHTML=rows.map(serviceCard).join("")||empty("No matching services found.","bi-search");document.getElementById("service-count").textContent=`${rows.length} service${rows.length===1?"":"s"}`};
+    if(tabs&&!tabs.dataset.bound){tabs.addEventListener("click",event=>{const button=event.target.closest("[data-service-filter]");if(!button)return;active=button.dataset.serviceFilter;tabs.querySelectorAll("[data-service-filter]").forEach(item=>item.classList.toggle("active",item===button));draw()});tabs.dataset.bound="1"}
     if(input&&!input.dataset.bound){input.addEventListener("input",draw);input.dataset.bound="1"}draw();
   }
 

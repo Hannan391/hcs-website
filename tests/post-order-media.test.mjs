@@ -77,9 +77,33 @@ test("service cards use lightweight title-matched vector icons instead of banner
   assert.match(root.innerHTML,/bi-pc-display/);
   assert.match(root.innerHTML,/bi-camera/);
   const styles=await readFile(new URL("../assets/styles.css",import.meta.url),"utf8");
-  assert.match(styles,/\.service-icon-visual\{[^}]*height:150px/);
-  assert.match(styles,/\.service-icon-visual\{[^}]*#0369a1[^}]*#083b66/);
-  assert.match(styles,/\.service-icon-visual \.bi\{[^}]*perspective|\.service-icon-visual \.bi\{[^}]*rotateX/);
+  assert.match(styles,/\.service-icon-visual\{[^}]*height:78px/);
+  assert.match(styles,/\.service-icon-visual:before\{[^}]*#dff5ff[^}]*#81c9ff/);
+  assert.match(styles,/\.service-icon-visual \.bi\{[^}]*perspective|\.service-icon-visual \.bi\{[^}]*rotateY/);
+});
+
+test("services page uses the approved professional dashboard layout",async()=>{
+  const page=await readFile(new URL("../services.html",import.meta.url),"utf8");
+  for(const hook of ["service-category-tabs","services-heading","service-stats","services-contact-strip"]){
+    assert.match(page,new RegExp(`id="${hook}"`));
+  }
+  assert.match(page,/Complete Solutions for <span>Your Needs<\/span>/);
+  assert.match(page,/10\+<\/strong>[\s\S]*5000\+<\/strong>[\s\S]*Fast<\/strong>[\s\S]*100%<\/strong>/);
+});
+
+test("service cards are compact horizontal explore cards with classified categories",async()=>{
+  const root=fakeElement();
+  await render("services",{services:[
+    {ID:"SV1",Title:"Color Photocopies & Prints",Description:"Print work"},
+    {ID:"SV2",Title:"FBR Services",Description:"Tax work"}
+  ]},{"services-grid":root,"service-count":fakeElement(),"service-search":fakeElement(),"service-category-tabs":fakeElement()});
+  assert.match(root.innerHTML,/service-card compact-service-card/);
+  assert.match(root.innerHTML,/data-service-group="printing"/);
+  assert.match(root.innerHTML,/data-service-group="government"/);
+  assert.match(root.innerHTML,/Explore <i class="bi bi-arrow-right"/);
+  const styles=await readFile(new URL("../assets/styles.css",import.meta.url),"utf8");
+  assert.match(styles,/\.services-dashboard-grid\{[^}]*repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(styles,/\.compact-service-card\{[^}]*grid-template-columns/);
 });
 
 test("product details use shared safe visual media",async()=>{
