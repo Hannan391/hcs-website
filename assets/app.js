@@ -1,7 +1,7 @@
 const CFG = {
   SELF_CONTAINED: true,
   BACKEND_URL: "https://script.google.com/macros/s/AKfycby-ILsCMUcD4_25OSwKAnAG7ajyjXbKfFmFxAmXTDfzxS3bvyWaZN2cJYrDKK7JJD55/exec",
-  CONTACT_EMAIL: "alhannancomputers@gmail.com",
+  CONTACT_EMAIL: "hannancsofficial@gmail.com",
   WHATSAPP_NUMBER: "923346395391",
   SOCIAL_LINKS: {
     youtube: "https://www.youtube.com/@hannancs021",
@@ -70,7 +70,7 @@ const CFG = {
             <a class="brand" href="index.html"><span class="brand-mark">HCS</span><span class="brand-copy"><b>Hannan Computers & Printers</b><small>Professional local services</small></span></a>
             <p>Printing, online applications, computer services, job information and quality products - managed professionally in Mamukanjan.</p>
             <div class="social-links" data-social-links></div>
-            <div class="footer-links"><div><h3>Quick Links</h3><a href="services.html">Services</a><a href="jobs.html">Latest Jobs</a><a href="catalog.html">Product Catalog</a></div><div><h3>Contact</h3><span data-setting="address">Bangla Chowk Mamukanjan</span><span data-setting="phone">0334-6395391</span><a href="mailto:${esc(CFG.CONTACT_EMAIL||"alhannancomputers@gmail.com")}">${esc(CFG.CONTACT_EMAIL||"alhannancomputers@gmail.com")}</a></div></div>
+            <div class="footer-links"><div><h3>Quick Links</h3><a href="services.html">Services</a><a href="jobs.html">Latest Jobs</a><a href="catalog.html">Product Catalog</a></div><div><h3>Contact</h3><span data-setting="address">Bangla Chowk Mamukanjan</span><span data-setting="phone">0334-6395391</span><a href="mailto:${esc(CFG.CONTACT_EMAIL||"hannancsofficial@gmail.com")}">${esc(CFG.CONTACT_EMAIL||"hannancsofficial@gmail.com")}</a></div></div>
           </div>
           <div class="footer-form-wrap">
             <h2>Contact Us</h2><p>This form sends your message directly to our email inbox.</p>
@@ -128,7 +128,7 @@ const CFG = {
       const status=form.querySelector(".form-status");
       const button=form.querySelector("button[type=submit]");
       const payload=new URLSearchParams(new FormData(form));
-      payload.set("action","contact");payload.set("page",location.href);payload.set("recipient",CFG.CONTACT_EMAIL||"alhannancomputers@gmail.com");
+      payload.set("action","contact");payload.set("page",location.href);payload.set("recipient",CFG.CONTACT_EMAIL||"hannancsofficial@gmail.com");
       if(payload.get("company"))return;
       if(!CFG.BACKEND_URL||!CFG.BACKEND_URL.startsWith("http")){status.className="form-status error";status.textContent="Email service is not configured yet.";return}
       button.disabled=true;status.className="form-status";status.textContent="Sending your message...";
