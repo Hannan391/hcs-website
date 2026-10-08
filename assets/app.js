@@ -24,7 +24,7 @@ const CFG = {
 
   const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
   const cleanId=value=>String(value||"").replace(/[^a-zA-Z0-9_-]/g,"");
-  const productName=p=>p.ItemName||p.Title||"HCS Product";
+  const productName=p=>p?.ItemName||p?.Title||"HCS Product";
   const money=value=>Number(value||0).toLocaleString("en-PK");
   const postTime=item=>{
     const value=item.CreatedAt||item.AdDate||item.UploadedAt||item.Date||item.LastDate||item.PublishDate||0;
@@ -564,12 +564,12 @@ const CFG = {
   function renderCart(){const root=document.getElementById("cart-items");if(!root)return;root.innerHTML=cart.length?cart.map(x=>{const p=(DATA.products||[]).find(y=>String(y.ID)===String(x.id));if(!p)return"";const title=productName(p);return `<div class="cart-item"><div><b>${esc(title)}</b><small>Rs ${money(p.Price)} each</small></div><div class="cart-qty"><button data-cart-minus="${esc(x.id)}">−</button><b>${x.qty}</b><button data-cart-plus="${esc(x.id)}">+</button><button class="cart-remove" data-cart-remove="${esc(x.id)}"><i class="bi bi-trash"></i></button></div></div>`}).join(""):`<div class="cart-empty"><i class="bi bi-cart3"></i><p>Your cart is empty.</p><small>Add products to place your order.</small></div>`;updateCartUI()}
   function openCart(){renderCart();document.getElementById("cart-drawer")?.classList.add("open");document.body.classList.add("cart-open")}
   function closeCart(){document.getElementById("cart-drawer")?.classList.remove("open");document.body.classList.remove("cart-open")}
-  function openCheckout(){if(!cart.length){toast("Your cart is empty.");return}closeCart();document.getElementById("checkout-modal")?.classList.add("open");document.body.classList.add("modal-open");const summary=document.getElementById("checkout-summary");if(summary)summary.innerHTML=cart.map(x=>{const p=(DATA.products||[]).find(y=>String(y.ID)===String(x.id));return `<div>${esc(productName(p))} × ${x.qty}<b>Rs ${money(Number(p.Price||0)*x.qty)}</b></div>`}).join("")+`<strong>Total <span>Rs ${money(cartTotal())}</span></strong>`}
+  function openCheckout(){if(!cart.length){toast("Your cart is empty.");return}const validCart=cart.filter(x=>(DATA.products||[]).some(y=>String(y.ID)===String(x.id)&&isInStock(y)));if(validCart.length!==cart.length){cart=validCart;localStorage.setItem("hcs-cart",JSON.stringify(cart));updateCartUI()}if(!cart.length){toast("Your cart is empty or the selected product is no longer available.");return}closeCart();document.getElementById("checkout-modal")?.classList.add("open");document.body.classList.add("modal-open");const summary=document.getElementById("checkout-summary");if(summary)summary.innerHTML=cart.map(x=>{const p=(DATA.products||[]).find(y=>String(y.ID)===String(x.id));return `<div>${esc(productName(p))} × ${x.qty}<b>Rs ${money(Number(p.Price||0)*x.qty)}</b></div>`}).join("")+`<strong>Total <span>Rs ${money(cartTotal())}</span></strong>`}
   async function submitOrder(form){
     const status=form.querySelector(".form-status"),button=form.querySelector("button[type=submit]");
     if(!cart.length){status.textContent="Your cart is empty.";return}
     const fd=new FormData(form);
-    const items=cart.map(x=>{const p=(DATA.products||[]).find(y=>String(y.ID)===String(x.id));return productName(p)+" ("+x.id+") × "+x.qty+" — Rs "+(Number(p.Price||0)*x.qty)}).join("\n");
+    const validItems=cart.map(x=>{const p=(DATA.products||[]).find(y=>String(y.ID)===String(x.id));return p?productName(p)+" ("+x.id+") × "+x.qty+" — Rs "+(Number(p.Price||0)*x.qty):""}).filter(Boolean);if(!validItems.length){status.className="form-status error";status.textContent="Selected product is no longer available. Please refresh the shop and try again.";button.disabled=false;return}const items=validItems.join("\n");
     const paymentProof=fd.get("paymentProof");
     if(!(paymentProof instanceof File)||!paymentProof.size){status.className="form-status error";status.textContent="Advance payment screenshot is required before placing the order.";return}
     const allowed=["image/jpeg","image/png","image/webp","application/pdf"];
