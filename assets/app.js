@@ -18,7 +18,7 @@ const CFG = {
   const PAGE=document.body.dataset.page||"home";
   let DATA={settings:{},services:[],jobs:[],downloads:[],products:[],schemes:[],education:[],knowledge:[]};
   let favourites=new Set(JSON.parse(localStorage.getItem("hcs-favourites")||"[]"));
-  const catalogState={search:"",brand:"",stock:"",sort:"newest",view:localStorage.getItem("hcs-catalog-view")||"grid",savedOnly:false};
+  const catalogState={search:"",brand:"",stock:"",category:"",sort:"newest",view:localStorage.getItem("hcs-catalog-view")||"grid",savedOnly:false};
   const jobSearchState={query:"",department:"",category:"",location:""};
 
   const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
@@ -370,7 +370,7 @@ const CFG = {
       <button class="favourite-button ${saved?"saved":""}" type="button" data-favourite="${esc(item.ID)}" aria-label="${saved?"Remove from":"Save to"} favourites"><i class="bi ${saved?"bi-heart-fill":"bi-heart"}"></i></button>
       <div class="product-badges">${isNew?'<span class="badge new">New Arrival</span>':""}<span class="badge">${esc(item.Category||"Product")}</span></div>
       ${visualMedia(item,"products",title,"ImageURL","ImageHTML","product-image")}
-      <div class="product-body"><span class="product-code">Product Code: ${esc(item.ID||"N/A")}</span><h3>${esc(title)}</h3><div class="product-brand">Brand: ${esc(item.Brand||"HCS")}</div><div class="price-row"><span class="price">Rs ${money(item.Price)}</span><span class="stock ${stock?"":"out"}">${stock?"In Stock":"Out of Stock"}</span></div>
+      <div class="product-body"><span class="product-code">Product Code: ${esc(item.ID||"N/A")}</span><h3>${esc(title)}</h3><div class="product-brand"><i class="bi bi-award"></i> ${esc(item.Brand||"HCS")} <span class="product-separator">·</span> ${esc(item.Category||"Product")}</div><div class="price-row"><span class="price">Rs ${money(item.Price)}</span><span class="stock ${stock?"":"out"}">${stock?"In Stock":"Out of Stock"}</span></div>
       <div class="product-actions"><button class="button primary small" type="button" data-details="${esc(item.ID)}">View Details</button><button class="icon-button" type="button" data-share-product="${esc(item.ID)}" aria-label="Share product"><i class="bi bi-share"></i></button><a class="icon-button" href="${waUrl(item.WhatsAppText||`Mujhe ${title} (${item.ID}) order karna hai.`)}" target="_blank" rel="noopener" aria-label="Order on WhatsApp"><i class="bi bi-whatsapp"></i></a></div></div>
     </article>`;
   }
@@ -506,14 +506,18 @@ const CFG = {
     const params=new URLSearchParams(location.search);catalogState.savedOnly=params.get("saved")==="1";
     const bindings={"product-search":"search","brand-filter":"brand","stock-filter":"stock","sort-products":"sort"};
     Object.entries(bindings).forEach(([id,key])=>document.getElementById(id)?.addEventListener(id==="product-search"?"input":"change",event=>{catalogState[key]=event.target.value;renderCatalogProducts()}));
-    document.getElementById("reset-filters")?.addEventListener("click",()=>{Object.assign(catalogState,{search:"",brand:"",stock:"",sort:"newest",savedOnly:false});["product-search","brand-filter","stock-filter"].forEach(id=>document.getElementById(id).value="");document.getElementById("sort-products").value="newest";renderCatalogProducts()});
+    document.getElementById("reset-filters")?.addEventListener("click",()=>{Object.assign(catalogState,{search:"",brand:"",stock:"",category:"",sort:"newest",savedOnly:false});document.querySelectorAll("[data-category]").forEach(x=>x.classList.toggle("active",x.dataset.category===""));["product-search","brand-filter","stock-filter"].forEach(id=>document.getElementById(id).value="");document.getElementById("sort-products").value="newest";renderCatalogProducts()});
     document.getElementById("saved-only")?.addEventListener("click",()=>{catalogState.savedOnly=!catalogState.savedOnly;renderCatalogProducts()});
     document.querySelectorAll("[data-view]").forEach(button=>button.addEventListener("click",()=>{catalogState.view=button.dataset.view;localStorage.setItem("hcs-catalog-view",catalogState.view);renderCatalogProducts()}));
     document.getElementById("open-filters")?.addEventListener("click",()=>document.getElementById("filter-panel").classList.add("open"));
     document.getElementById("close-filters")?.addEventListener("click",()=>document.getElementById("filter-panel").classList.remove("open"));
+    const categoryTabs=document.getElementById("shop-category-tabs");
+    if(categoryTabs&&!categoryTabs.dataset.bound){categoryTabs.addEventListener("click",event=>{const button=event.target.closest("[data-category]");if(!button)return;catalogState.category=button.dataset.category||"";categoryTabs.querySelectorAll("[data-category]").forEach(x=>x.classList.toggle("active",x===button));renderCatalogProducts()});categoryTabs.dataset.bound="1"}
   }
 
   function renderCatalog(){
+    const categoryTabs=document.getElementById("shop-category-tabs");
+    if(categoryTabs){const current=catalogState.category;const categories=[...new Set((DATA.products||[]).map(p=>String(p.Category||"").trim()).filter(Boolean))].sort();categoryTabs.innerHTML='<button type="button" class="'+(!current?"active":"")+'" data-category="">All Products</button>'+categories.map(x=>'<button type="button" class="'+(x===current?"active":"")+'" data-category="'+esc(x)+'"><i class="bi bi-grid"></i> '+esc(x)+'</button>').join("")}
     const brand=document.getElementById("brand-filter");
     if(brand){const current=brand.value;const brands=[...new Set((DATA.products||[]).map(p=>String(p.Brand||"HCS").trim()).filter(Boolean))].sort();brand.innerHTML='<option value="">All brands</option>'+brands.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");brand.value=current}
     renderCatalogProducts();
@@ -524,6 +528,7 @@ const CFG = {
     let rows=[...(DATA.products||[])];const q=catalogState.search.trim().toLowerCase();
     if(q)rows=rows.filter(p=>[productName(p),p.ID,p.Category,p.Brand,p.ProductDetails,p.Specifications].join(" ").toLowerCase().includes(q));
     if(catalogState.brand)rows=rows.filter(p=>String(p.Brand||"HCS")===catalogState.brand);
+    if(catalogState.category)rows=rows.filter(p=>String(p.Category||"")===catalogState.category);
     if(catalogState.stock)rows=rows.filter(p=>catalogState.stock==="in"?isInStock(p):!isInStock(p));
     if(catalogState.savedOnly)rows=rows.filter(p=>favourites.has(String(p.ID)));
     rows.sort((a,b)=>catalogState.sort==="price-low"?Number(a.Price||0)-Number(b.Price||0):catalogState.sort==="price-high"?Number(b.Price||0)-Number(a.Price||0):catalogState.sort==="alpha"?productName(a).localeCompare(productName(b)):newestFirst(a,b));
@@ -536,7 +541,7 @@ const CFG = {
 
   function renderActiveFilters(){
     const root=document.getElementById("active-filters");if(!root)return;const labels=[];
-    if(catalogState.search)labels.push(`Search: ${catalogState.search}`);if(catalogState.brand)labels.push(`Brand: ${catalogState.brand}`);if(catalogState.stock)labels.push(catalogState.stock==="in"?"In stock":"Out of stock");if(catalogState.savedOnly)labels.push("Saved only");
+    if(catalogState.search)labels.push(`Search: ${catalogState.search}`);if(catalogState.category)labels.push(`Category: ${catalogState.category}`);if(catalogState.brand)labels.push(`Brand: ${catalogState.brand}`);if(catalogState.stock)labels.push(catalogState.stock==="in"?"In stock":"Out of stock");if(catalogState.savedOnly)labels.push("Saved only");
     root.innerHTML=labels.map(label=>`<span class="filter-chip"><i class="bi bi-funnel"></i>${esc(label)}</span>`).join("");
   }
 
