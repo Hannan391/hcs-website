@@ -391,15 +391,16 @@ const CFG = {
   async function loadData(){
     if(window.HCS_INLINE_DATA){
       DATA=currentData(window.HCS_INLINE_DATA);renderPage();applySettings();
-    }else{
-      const cached=window.HCSDataCache?.read();
-      if(cached){DATA=currentData(cached);renderPage();applySettings()}
-      try{
-        const response=await fetch("data/live-data.json",{cache:"no-store"});
-        if(response.ok){DATA=currentData(await response.json());renderPage();applySettings()}
-      }catch(error){renderPage()}
+      // Keep the first page load fast. Remote admin data can be requested explicitly with ?refresh=1.
+      if(new URLSearchParams(location.search).get("refresh")==="1"&&CFG.BACKEND_URL&&CFG.BACKEND_URL.startsWith("http"))loadRemoteData();
+      return;
     }
-    if(CFG.BACKEND_URL&&CFG.BACKEND_URL.startsWith("http"))loadRemoteData();
+    const cached=window.HCSDataCache?.read();
+    if(cached){DATA=currentData(cached);renderPage();applySettings()}
+    try{
+      const response=await fetch("data/live-data.json",{cache:"no-store"});
+      if(response.ok){DATA=currentData(await response.json());renderPage();applySettings()}
+    }catch(error){renderPage()}
   }
 
   function loadRemoteData(){
