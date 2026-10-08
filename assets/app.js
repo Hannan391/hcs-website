@@ -1,7 +1,7 @@
 const CFG = {
   SELF_CONTAINED: true,
   BACKEND_URL: "https://script.google.com/macros/s/AKfycby-ILsCMUcD4_25OSwKAnAG7ajyjXbKfFmFxAmXTDfzxS3bvyWaZN2cJYrDKK7JJD55/exec",
-  CONTACT_EMAIL: "hannancsofficial@gmail.com",
+  CONTACT_EMAIL: "alhannancomputers@gmail.com",
   WHATSAPP_NUMBER: "923346395391",
   SOCIAL_LINKS: {
     youtube: "https://www.youtube.com/@hannancs021",
