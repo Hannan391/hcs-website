@@ -582,8 +582,17 @@ const CFG = {
       if(!CFG.BACKEND_URL){status.className="form-status error";status.textContent="Order service is not configured.";return}
       button.disabled=true;status.textContent="Submitting order and payment proof...";
       try{
-        const payload=new URLSearchParams({action:"order",name:String(fd.get("name")||""),phone:String(fd.get("phone")||""),address:String(fd.get("address")||""),tehsil:String(fd.get("tehsil")||""),district:String(fd.get("district")||""),items,total:String(cartTotal()),notes:String(fd.get("notes")||""),proofName:paymentProof.name,proofMime:paymentProof.type,proofBase64});
-        await fetch(CFG.BACKEND_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:payload.toString()});
+        const fields={action:"order",name:String(fd.get("name")||""),phone:String(fd.get("phone")||""),address:String(fd.get("address")||""),tehsil:String(fd.get("tehsil")||""),district:String(fd.get("district")||""),items,total:String(cartTotal()),notes:String(fd.get("notes")||""),proofName:paymentProof.name,proofMime:paymentProof.type,proofBase64};
+        const frame=document.createElement("iframe");
+        frame.name="hcs-order-submit-frame-"+Date.now();
+        frame.style.display="none";
+        document.body.appendChild(frame);
+        const postForm=document.createElement("form");
+        postForm.method="POST";postForm.action=CFG.BACKEND_URL;postForm.target=frame.name;postForm.style.display="none";
+        Object.entries(fields).forEach(([key,value])=>{const input=document.createElement("input");input.type="hidden";input.name=key;input.value=String(value??"");postForm.appendChild(input)});
+        document.body.appendChild(postForm);
+        postForm.submit();
+        setTimeout(()=>{frame.remove();postForm.remove()},10000);
         cart=[];localStorage.setItem("hcs-cart","[]");renderCart();updateCartUI();form.reset();
         status.className="form-status success";status.textContent="Order submitted. Payment proof is pending verification within 24 hours.";
         setTimeout(()=>{document.getElementById("checkout-modal")?.classList.remove("open");document.body.classList.remove("modal-open")},3200);
