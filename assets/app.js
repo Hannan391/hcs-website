@@ -667,9 +667,8 @@ const CFG = {
     const jobShare=event.target.closest("[data-share-job]");if(jobShare){shareJob(jobShare.dataset.shareJob);return}
     const add=event.target.closest("[data-add-cart]");if(add){addToCart(add.dataset.addCart);return}const orderNow=event.target.closest("[data-order-now]");if(orderNow){addToCart(orderNow.dataset.orderNow);openCheckout();return}const openCartBtn=event.target.closest("[data-open-cart]");if(openCartBtn){openCart();return}const checkout=event.target.closest("[data-checkout]");if(checkout){openCheckout();return}const minus=event.target.closest("[data-cart-minus]");if(minus){changeCartQty(minus.dataset.cartMinus,-1);return}const plus=event.target.closest("[data-cart-plus]");if(plus){changeCartQty(plus.dataset.cartPlus,1);return}const remove=event.target.closest("[data-cart-remove]");if(remove){removeFromCart(remove.dataset.cartRemove);return}const closeCartBtn=event.target.closest("[data-close-cart]");if(closeCartBtn){closeCart();return}const close=event.target.closest("[data-close-modal]");if(close)closeModal(close.closest(".modal"));
   });
-  document.getElementById("checkout-form")?.addEventListener("submit",event=>{event.preventDefault();submitOrder(event.currentTarget)});
   document.addEventListener("error",event=>{const img=event.target;if(img.tagName!=="IMG")return;const fallback=img.dataset.fallback;if(fallback&&!img.dataset.triedFallback){img.dataset.triedFallback="1";img.src=fallback}else{img.style.opacity="0"}},true);
   document.addEventListener("keydown",event=>{if(event.key==="Escape")document.querySelectorAll(".modal.open").forEach(closeModal)});
 
-  renderLayout();createModals();setupCatalog();updateSavedCount();updateCartUI();loadData();
+  renderLayout();createModals();document.getElementById("checkout-form")?.addEventListener("submit",event=>{event.preventDefault();submitOrder(event.currentTarget)});setupCatalog();updateSavedCount();updateCartUI();loadData();
 })();
