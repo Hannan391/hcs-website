@@ -9,6 +9,13 @@
   <link rel="stylesheet" href="assets/styles.css?v=20261009-blue-actions">
   <script src="assets/data.js" defer></script>
   <script src="assets/app.js?v=20261008-orderfix4" defer></script>
+<style id="hcs-product-action-fix">
+.product-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important;align-items:stretch!important}
+.product-actions .button,.product-actions .button.primary,.product-actions .button[data-add-cart],.product-actions .button[data-order-now],.product-actions .icon-button{box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;flex-direction:column!important;gap:5px!important;min-width:0!important;width:100%!important;min-height:54px!important;padding:8px 6px!important;border:1px solid #1265d2!important;border-radius:12px!important;background:linear-gradient(145deg,#1976e8,#0759cf)!important;color:#fff!important;box-shadow:0 7px 17px rgba(20,105,216,.18)!important;font-size:12px!important;font-weight:800!important;line-height:1.15!important;text-align:center!important}
+.product-actions .button i,.product-actions .icon-button i{color:#fff!important}
+.product-actions .icon-button{grid-column:1/-1!important;flex-direction:row!important;min-height:46px!important;padding:10px 14px!important}
+.product-actions .button:hover,.product-actions .icon-button:hover{background:linear-gradient(145deg,#2584f4,#0752c3)!important;color:#fff!important}
+</style>
 </head>
 <body data-page="catalog">
   <div id="site-header"></div>
