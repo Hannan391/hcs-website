@@ -389,16 +389,20 @@ const CFG = {
   }
 
   async function loadData(){
-    if(window.HCS_INLINE_DATA){
-      DATA=currentData(window.HCS_INLINE_DATA);renderPage();applySettings();
-      return;
-    }
     const cached=window.HCSDataCache?.read();
-    if(cached){DATA=currentData(cached);renderPage();applySettings()}
-    try{
-      const response=await fetch("data/live-data.json",{cache:"no-store"});
-      if(response.ok){DATA=currentData(await response.json());renderPage();applySettings()}
-    }catch(error){renderPage()}
+    if(cached){
+      DATA=currentData(cached);renderPage();applySettings();
+    }else if(window.HCS_INLINE_DATA){
+      DATA=currentData(window.HCS_INLINE_DATA);renderPage();applySettings();
+    }else{
+      try{
+        const response=await fetch("data/live-data.json",{cache:"no-store"});
+        if(response.ok){DATA=currentData(await response.json());renderPage();applySettings()}
+        else renderPage();
+      }catch(error){renderPage()}
+    }
+    // Show local/cached content immediately, then refresh from the live Apps Script backend.
+    if(CFG.BACKEND_URL&&CFG.BACKEND_URL.startsWith("http"))loadRemoteData();
   }
 
   function loadRemoteData(){
