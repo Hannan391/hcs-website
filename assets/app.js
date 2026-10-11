@@ -572,6 +572,22 @@ const CFG = {
   function openCart(){renderCart();document.getElementById("cart-drawer")?.classList.add("open");document.body.classList.add("cart-open")}
   function closeCart(){document.getElementById("cart-drawer")?.classList.remove("open");document.body.classList.remove("cart-open")}
   function openCheckout(){if(!cart.length){toast("Your cart is empty.");return}const validCart=cart.filter(x=>(DATA.products||[]).some(y=>String(y.ID)===String(x.id)&&isInStock(y)));if(validCart.length!==cart.length){cart=validCart;localStorage.setItem("hcs-cart",JSON.stringify(cart));updateCartUI()}if(!cart.length){toast("Your cart is empty or the selected product is no longer available.");return}closeCart();document.getElementById("checkout-modal")?.classList.add("open");document.body.classList.add("modal-open");const summary=document.getElementById("checkout-summary");if(summary)summary.innerHTML=cart.map(x=>{const p=(DATA.products||[]).find(y=>String(y.ID)===String(x.id));return `<div>${esc(productName(p))} × ${x.qty}<b>Rs ${money(Number(p.Price||0)*x.qty)}</b></div>`}).join("")+`<div><span>Products Subtotal</span><b>Rs ${money(cartTotal())}</b></div><div><span>Delivery Charges (${cartItemCount()} items)</span><b>Rs ${money(deliveryCharges())}</b></div><strong>Total Payment <span>Rs ${money(grandTotal())}</span></strong><div class="payment-account"><b>Payment Account Number:</b> 0334-6395391 <button type="button" class="button small" data-copy-payment-account>Copy</button><p>Transfer the total payment above and upload your payment proof.</p></div>`}
+  function buildOrderReceiptHtml(order){
+    const rows=String(order.items||"").split("\n").filter(Boolean).map(line=>"<tr><td>"+esc(line)+"</td></tr>").join("");
+    return "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>HCS Order Receipt "+esc(order.orderId)+"</title><style>body{font:15px Arial,sans-serif;color:#172033;margin:0;padding:28px;background:#f4f6f9}.receipt{max-width:760px;margin:auto;background:#fff;padding:32px;border:1px solid #dce2ea;border-radius:12px}.brand{font-size:24px;font-weight:700;color:#10294b}.muted{color:#64748b}.pill{display:inline-block;padding:6px 10px;border-radius:20px;background:#fff4d6;color:#825600;font-weight:700}table{width:100%;border-collapse:collapse;margin:20px 0}td{padding:12px 8px;border-bottom:1px solid #e2e8f0}h2{margin-top:28px;font-size:17px}.total{font-size:20px;font-weight:700;text-align:right;margin-top:18px}.foot{border-top:1px solid #e2e8f0;margin-top:26px;padding-top:16px;font-size:13px;color:#64748b}@media print{body{background:#fff;padding:0}.receipt{border:0;border-radius:0}}</style></head><body><main class=\"receipt\"><div class=\"brand\">HANNAN COMPUTERS &amp; PRINTERS</div><div class=\"muted\">Bangla Chowk Mamukanjan · 0334-6395391</div><h1>Order Receipt</h1><p><b>Tracking Number:</b> "+esc(order.orderId)+"</p><p><b>Order Date:</b> "+esc(order.date)+"</p><p><b>Customer:</b> "+esc(order.name)+"</p><p><b>Email:</b> "+esc(order.email)+"</p><p><b>Phone:</b> "+esc(order.phone)+"</p><p><b>Delivery Address:</b> "+esc(order.address)+", "+esc(order.tehsil)+", "+esc(order.district)+"</p><h2>Order Details</h2><table><tbody>"+rows+"</tbody></table><div class=\"total\">Total: Rs "+esc(order.total)+"</div><p><span class=\"pill\">Advance payment proof pending verification</span></p><p class=\"muted\">Please keep this receipt and use your tracking number to check order status at hannancs.com/track-order.html.</p><div class=\"foot\">This receipt confirms that your order details were submitted. Payment verification is normally updated within 24 hours.</div></main></body></html>";
+  }
+  function downloadOrderReceipt(html,orderId){
+    const blob=new Blob([html],{type:"text/html;charset=utf-8"}),url=URL.createObjectURL(blob),link=document.createElement("a");
+    link.href=url;link.download="HCS-Order-Receipt-"+String(orderId||"order").replace(/[^a-zA-Z0-9_-]/g,"")+".html";
+    document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }
+  function printOrderReceipt(html){
+    const popup=window.open("","_blank","width=850,height=900");
+    if(!popup){toast("Please allow pop-ups to print or save your receipt as PDF.");return}
+    popup.document.open();popup.document.write(html);popup.document.close();popup.focus();
+    setTimeout(()=>{try{popup.print()}catch(error){}},600);
+  }
+
   async function submitOrder(form){
     const status=form.querySelector(".form-status"),button=form.querySelector("button[type=submit]");
     if(!cart.length){status.textContent="Your cart is empty.";return}
@@ -602,9 +618,11 @@ const CFG = {
         document.body.appendChild(postForm);
         postForm.submit();
         setTimeout(()=>{frame.remove();postForm.remove()},10000);
+        const receiptHtml=buildOrderReceiptHtml({orderId:trackingId,date:new Date().toLocaleString("en-PK"),name:String(fd.get("name")||""),email:String(fd.get("email")||""),phone:String(fd.get("phone")||""),address:String(fd.get("address")||""),tehsil:String(fd.get("tehsil")||""),district:String(fd.get("district")||""),items:orderItems,total:money(grandTotal())});
         cart=[];localStorage.setItem("hcs-cart","[]");renderCart();updateCartUI();form.reset();
-        status.className="form-status success";status.innerHTML="Order submitted. Your tracking number is <b>"+esc(trackingId)+"</b>. Save it to track your order. <a href=\"track-order.html\" target=\"_blank\" rel=\"noopener\">Track Your Order</a><br>Payment proof is pending verification within 24 hours.";
-        setTimeout(()=>{document.getElementById("checkout-modal")?.classList.remove("open");document.body.classList.remove("modal-open")},3200);
+        status.className="form-status success";status.innerHTML="Order submitted. Tracking number: <b>"+esc(trackingId)+"</b>. A confirmation email will be sent to the email address you provided (check Spam/Junk too).<br><a href=\"track-order.html\" target=\"_blank\" rel=\"noopener\">Track Your Order</a><br><button type=\"button\" class=\"button primary\" data-download-order-receipt>Download Order Receipt</button> <button type=\"button\" class=\"button secondary\" data-print-order-receipt>Print / Save as PDF</button><br><small>Payment proof is pending verification within 24 hours.</small>";
+        status.querySelector("[data-download-order-receipt]")?.addEventListener("click",()=>downloadOrderReceipt(receiptHtml,trackingId));
+        status.querySelector("[data-print-order-receipt]")?.addEventListener("click",()=>printOrderReceipt(receiptHtml));
       }catch(e){status.className="form-status error";status.textContent="Order could not be submitted. Please try again."}
       finally{button.disabled=false}
     };
