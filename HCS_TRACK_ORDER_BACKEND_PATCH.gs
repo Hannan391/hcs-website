@@ -2,7 +2,7 @@
 Add the branch shown below near the top of your existing doGet(e), after the api=ping check:
 if (e.parameter.action === "track") return trackOrderPublic_(e.parameter);
 
-Then add the function below anywhere in the Apps Script project and deploy a NEW version.
+Also, in createWebsiteOrder_(p), replace the existing line that starts `const orderId="HCS-"` with the following so the ID shown to the customer is the ID saved in the Orders sheet:\nconst requestedOrderId = clean_(p.orderId, 60);\nconst orderId = /^HCS-\\d{8}-[A-Z0-9]{6}$/.test(requestedOrderId) ? requestedOrderId : "HCS-" + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmmss") + "-" + Utilities.getUuid().slice(0,6).toUpperCase();\n\nThen add the function below anywhere in the Apps Script project and deploy a NEW version.
 This returns only order status/total/date after BOTH Order ID and phone match.
 */
 function trackOrderPublic_(p) {
