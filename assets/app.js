@@ -590,7 +590,8 @@ const CFG = {
       button.disabled=true;status.textContent="Submitting order and payment proof...";
       try{
         const orderItems=items+"\nDelivery Charges ("+cartItemCount()+" items) — Rs "+deliveryCharges();
-        const fields={action:"order",name:String(fd.get("name")||""),phone:String(fd.get("phone")||""),address:String(fd.get("address")||""),tehsil:String(fd.get("tehsil")||""),district:String(fd.get("district")||""),items:orderItems,total:String(grandTotal()),notes:String(fd.get("notes")||""),proofName:paymentProof.name,proofMime:paymentProof.type,proofBase64};
+        const trackingId="HCS-"+new Date().toISOString().slice(0,10).replace(/-/g,"")+"-"+Math.random().toString(36).slice(2,8).toUpperCase();
+        const fields={action:"order",orderId:trackingId,name:String(fd.get("name")||""),phone:String(fd.get("phone")||""),address:String(fd.get("address")||""),tehsil:String(fd.get("tehsil")||""),district:String(fd.get("district")||""),items:orderItems,total:String(grandTotal()),notes:String(fd.get("notes")||""),proofName:paymentProof.name,proofMime:paymentProof.type,proofBase64};
         const frame=document.createElement("iframe");
         frame.name="hcs-order-submit-frame-"+Date.now();
         frame.style.display="none";
@@ -602,7 +603,7 @@ const CFG = {
         postForm.submit();
         setTimeout(()=>{frame.remove();postForm.remove()},10000);
         cart=[];localStorage.setItem("hcs-cart","[]");renderCart();updateCartUI();form.reset();
-        status.className="form-status success";status.textContent="Order submitted. Payment proof is pending verification within 24 hours.";
+        status.className="form-status success";status.innerHTML="Order submitted. Your tracking number is <b>"+esc(trackingId)+"</b>. Save it to track your order. <a href=\"track-order.html\" target=\"_blank\" rel=\"noopener\">Track Your Order</a><br>Payment proof is pending verification within 24 hours.";
         setTimeout(()=>{document.getElementById("checkout-modal")?.classList.remove("open");document.body.classList.remove("modal-open")},3200);
       }catch(e){status.className="form-status error";status.textContent="Order could not be submitted. Please try again."}
       finally{button.disabled=false}
