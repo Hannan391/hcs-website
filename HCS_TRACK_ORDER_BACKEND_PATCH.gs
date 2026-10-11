@@ -39,30 +39,29 @@ try {
 }
 Keep the existing admin notification email.
 
-7) Add this function anywhere in Code.gs:
+7) Add this function anywhere in Code.gs. Customers track using ONLY the tracking number; do not require phone number. It returns only order ID, date, total, payment status, and order status.
+
 function trackOrderPublic_(p) {
   var callback = String(p.callback || "hcsTrackCallback");
   if (!/^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) callback = "hcsTrackCallback";
   var result;
   try {
-    var orderId = String(p.orderId || "").trim();
-    var phone = String(p.phone || "").replace(/\\D/g, "");
-    if (!orderId || phone.length < 7) throw new Error("Enter your tracking number and order phone number.");
+    var orderId = String(p.orderId || "").trim().toUpperCase();
+    if (!/^HCS-\\d{8}-[A-Z0-9]{6}$/.test(orderId)) throw new Error("Enter a valid tracking number.");
     var sheet = SpreadsheetApp.getActive().getSheetByName("Orders");
-    if (!sheet || sheet.getLastRow() < 2) throw new Error("Order not found. Check your details.");
+    if (!sheet || sheet.getLastRow() < 2) throw new Error("Order not found. Check the tracking number.");
     var data = sheet.getDataRange().getDisplayValues();
     var headers = data[0].map(String);
     var ix = {};
     headers.forEach(function(h, i) { ix[h] = i; });
     for (var r = 1; r < data.length; r++) {
       var row = data[r];
-      var savedPhone = String(row[ix.Phone] || "").replace(/\\D/g, "");
-      if (String(row[ix.OrderID] || "").trim().toUpperCase() === orderId.toUpperCase() && savedPhone === phone) {
+      if (String(row[ix.OrderID] || "").trim().toUpperCase() === orderId) {
         result = { ok:true, orderId:row[ix.OrderID], createdAt:row[ix.CreatedAt], totalAmount:row[ix.TotalAmount], paymentStatus:row[ix.PaymentStatus] || "Payment Pending", orderStatus:row[ix.OrderStatus] || "Order Received" };
         break;
       }
     }
-    if (!result) throw new Error("Order not found. Check your tracking number and phone number.");
+    if (!result) throw new Error("Order not found. Check the tracking number.");
   } catch (err) { result = { ok:false, message:String(err.message || "Order could not be found.") }; }
   return ContentService.createTextOutput(callback + "(" + JSON.stringify(result).replace(/</g, "\\u003c") + ");").setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
