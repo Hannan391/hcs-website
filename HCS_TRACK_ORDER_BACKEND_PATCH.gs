@@ -17,7 +17,7 @@ if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) throw new Error("Enter a valid
 
 4) Replace the existing orderId declaration with:
 const requestedOrderId = clean_(p.orderId, 60);
-const orderId = /^HCS-\\d{8}-[A-Z0-9]{6}$/.test(requestedOrderId) ? requestedOrderId : "HCS-" + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmmss") + "-" + Utilities.getUuid().slice(0,6).toUpperCase();
+const orderId = /^HCS-\d{8}-[A-Z0-9]{6}$/.test(requestedOrderId) ? requestedOrderId : "HCS-" + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd-HHmmss") + "-" + Utilities.getUuid().slice(0,6).toUpperCase();
 
 5) Change the Orders appendRow line to:
 if(sheet)sheet.appendRow([orderId,created,name,phone,address,tehsil,district,items,total,notes,proofName,proofUrl,"Payment Pending","Order Received","",email]);
@@ -47,7 +47,7 @@ function trackOrderPublic_(p) {
   var result;
   try {
     var orderId = String(p.orderId || "").trim().toUpperCase();
-    if (!/^HCS-\\d{8}-[A-Z0-9]{6}$/.test(orderId)) throw new Error("Enter a valid tracking number.");
+    if (!/^HCS-\d{8}-[A-Z0-9]{6}$/.test(orderId)) throw new Error("Enter a valid tracking number.");
     var sheet = SpreadsheetApp.getActive().getSheetByName("Orders");
     if (!sheet || sheet.getLastRow() < 2) throw new Error("Order not found. Check the tracking number.");
     var data = sheet.getDataRange().getDisplayValues();
