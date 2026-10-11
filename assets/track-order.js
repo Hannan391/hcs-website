@@ -5,7 +5,7 @@ const form=document.getElementById("track-form"),status=document.getElementById(
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const steps=["Order Received","Processing","Ready","Completed"];
 function render(data){
- if(!data||!data.ok){status.className="track-status form-status error";status.textContent=(data&&data.message)||"Order not found. Check the tracking number and phone number.";result.hidden=true;return}
+ if(!data||!data.ok){status.className="track-status form-status error";status.textContent=(data&&data.message)||"Order not found. Check the tracking number.";result.hidden=true;return}
  status.textContent="";status.className="track-status form-status success";result.hidden=false;
  const orderStatus=String(data.orderStatus||"Order Received"),payment=String(data.paymentStatus||"Payment Pending");
  const current=steps.indexOf(orderStatus);
@@ -14,12 +14,12 @@ function render(data){
 }
 form.addEventListener("submit",event=>{
  event.preventDefault();result.hidden=true;status.className="track-status form-status";status.textContent="Checking your order...";
- const orderId=form.elements.orderId.value.trim(),phone=form.elements.phone.value.trim();
- if(!orderId||!phone){status.textContent="Enter both fields.";return}
+ const orderId=form.elements.orderId.value.trim();
+ if(!orderId){status.textContent="Enter your tracking number.";return}
  const callback="hcsTrackCallback";
  window[callback]=data=>{delete window[callback];script.remove();render(data)};
  const script=document.createElement("script");
- script.src=BACKEND+"?action=track&orderId="+encodeURIComponent(orderId)+"&phone="+encodeURIComponent(phone)+"&callback="+callback;
+ script.src=BACKEND+"?action=track&orderId="+encodeURIComponent(orderId)+"&callback="+callback;
  script.onerror=()=>{delete window[callback];script.remove();status.className="track-status form-status error";status.textContent="Tracking service is not active yet. Please try again later or contact the shop."};
  document.body.appendChild(script);
 });
