@@ -82,7 +82,7 @@ const CFG = {
             </form>
           </div>
         </div>
-        <div class="footer-bottom"><div class="shell"><span>© ${new Date().getFullYear()} HCS - Hannan Computers & Printers</span><a href="${esc(CFG.BACKEND_URL||"#")}" target="_blank" rel="noopener">Admin</a></div></div>
+        <div class="footer-bottom"><div class="shell"><span>© ${new Date().getFullYear()} HCS - Hannan Computers & Printers</span><span style="display:inline-flex;gap:12px;align-items:center;font-size:12px;font-weight:400"><a href="${esc(CFG.BACKEND_URL||"#")}" target="_blank" rel="noopener" style="font-size:12px;font-weight:400">Admin</a><a href="https://ln.run/KGzXd" target="_blank" rel="noopener noreferrer" style="font-size:12px;font-weight:400">POS</a></span></div></div>
       </footer>`;
 
     const toggle=document.querySelector(".menu-toggle");
